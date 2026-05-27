@@ -101,25 +101,54 @@ function generateDeskripsi(mapel: string, skor: string | number) {
   const nilai = Number(skor);
   const m = mapel.toLowerCase();
   
+  let capaianTertinggi = "memahami berbagai capaian pembelajaran secara menyeluruh";
+  let capaianTerendah = "penguasaan materi yang lebih kompleks";
+
   if (m.includes("matematika")) {
-    return nilai >= 80 
-      ? "Ananda sudah memahami berbagai bentuk bangun datar dan sudah mengenal tentang penentuan besar kecilnya suatu bangun datar dengan menggunakan pengukuran tidak baku. Ananda sudah mampu melakukan operasi penjumlahan dengan baik.\n\nAnanda masih perlu didampingi dalam melakukan operasi pengurangan." 
-      : "Perlu bimbingan konsep matematika dasar dan operasi hitung.";
+    capaianTertinggi = "memahami operasi hitung dasar, pengenalan bentuk geometri, dan penalaran logika matematika";
+    capaianTerendah = "ketelitian pemecahan masalah (problem solving) pada penerapan soal cerita terapan";
+  } else if (m.includes("indonesia")) {
+    capaianTertinggi = "menyampaikan gagasan secara komunikatif dan memahami isi utama dari teks bacaan";
+    capaianTerendah = "keterampilan menyusun teks tertulis secara sistematis dengan ejaan dan tanda baca yang baku";
+  } else if (m.includes("pancasila") || m.includes("kewarganegaraan") || m.includes("pkn")) {
+    capaianTertinggi = "memahami nilai-nilai luhur Pancasila, menghargai kebhinekaan, dan mentaati norma yang berlaku";
+    capaianTerendah = "penerapan penalaran analisis kritis pada studi kasus hak dan kewajiban warga negara";
+  } else if (m.includes("agama") || m.includes("budi pekerti") || m.includes("akhlak") || m.includes("qur'an") || m.includes("fikih")) {
+    capaianTertinggi = "memahami pilar keimanan, tata cara ibadah sesuai syariat, dan mengamalkan sikap religius";
+    capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan telaah mendalam pada teks keagamaan";
+  } else if (m.includes("ipas") || m.includes("alam") || m.includes("biologi") || m.includes("fisika") || m.includes("kimia")) {
+    capaianTertinggi = "memahami konsep ilmu pengetahuan atau sains yang dipelajari dan menunjukkan kepedulian pada alam";
+    capaianTerendah = "keterampilan melakukan observasi ilmiah dan akurasi menyajikan laporan hasil eksperimen";
+  } else if (m.includes("sosial") || m.includes("sejarah") || m.includes("sosiologi") || m.includes("ekonomi") || m.includes("geografi")) {
+    capaianTertinggi = "memahami fenomena keruangan, interaksi sosial kemasyarakatan, serta alur kesejarahan di sekitarnya";
+    capaianTerendah = "penalaran tingkat lanjut tentang dampak peristiwa sejarah atau ekonomi terhadap masa kini";
+  } else if (m.includes("inggris") || m.includes("arab") || m.includes("bahasa")) {
+    capaianTertinggi = "memahami instruksi sederhana, ragam kosakata umum, dan mampu merespon dasar interaksi tutur kata";
+    capaianTerendah = "kepercayaan diri dalam percakapan lisan (speaking) dan keluwesan struktur tata bahasa";
+  } else if (m.includes("jasmani") || m.includes("olahraga") || m.includes("pjok")) {
+    capaianTertinggi = "berprestasi dalam koordinasi gerak dasar dan kemampuan bekerja tim saat berolahraga kelompok";
+    capaianTerendah = "pemahaman mendalam terkait taktik cabang olahraga spesifik dan pemeliharaan kebugaran rutin mandiri";
+  } else if (m.includes("seni") || m.includes("budaya") || m.includes("prakarya") || m.includes("kreatif")) {
+    capaianTertinggi = "mengekspresikan daya imajinasi melalui karya original yang memiliki nilai estetika dan apresiatif";
+    capaianTerendah = "kerapian dalam tahap pengerjaan penyelesaian akhir (finishing) serta keunikan detail pada karya seni";
+  } else if (m.includes("informatika") || m.includes("komputer") || m.includes("tik")) {
+    capaianTertinggi = "mengoperasikan perangkat lunak dasar dengan presisi serta menunjukkan etika literasi digital yang cakap";
+    capaianTerendah = "pemahaman penerapan bahasa algoritma terstruktur dan perancangan dasar arsitektur pemrograman";
+  } else if (m.includes("kejuruan") || m.includes("praktik") || m.includes("dasar-dasar") || m.includes("konsentrasi") || m.includes("pilihan") || m.includes("lokal")) {
+    capaianTertinggi = "menerapkan kompetensi sasaran keahlian dan menjalankan penerapan Prosedur Operasional Standar (SOP)";
+    capaianTerendah = "kecepatan taktis serta tingkat kemandirian penuh dalam eksekusi proyek skala level industri";
   }
-  if (m.includes("indonesia")) {
-    return nilai >= 80 
-      ? "Ananda sudah mampu memahami arti dari kosakata yang cukup kompleks, dan juga sudah mampu memahami makna dari sejumlah kalimat dengan tepat.\n\nAnanda masih perlu bimbingan dalam menyampaikan gagasan, instruksi dan keinginannya." 
-      : "Perlu latihan komunikasi dan pemahaman bacaan.";
+
+  // Kurikulum Merdeka Standard Formatting strings
+  if (nilai >= 90) {
+    return `Ananda menunjukkan penguasaan yang sangat baik dalam ${capaianTertinggi}.`;
+  } else if (nilai >= 80) {
+    return `Ananda menunjukkan penguasaan yang baik dalam ${capaianTertinggi}. Perlu bimbingan lebih pada bagian ${capaianTerendah}.`;
+  } else if (nilai >= 70) {
+    return `Ananda menunjukkan penguasaan yang cukup dalam ${capaianTertinggi}. Masih cukup memerlukan pendampingan berkelanjutan dalam ${capaianTerendah}.`;
+  } else {
+    return `Ananda memerlukan bimbingan intensif dan khusus agar mampu ${capaianTertinggi}, khususnya mendalami terkait ${capaianTerendah}.`;
   }
-  if (m.includes("pancasila")) {
-    return nilai >= 80
-      ? "Ananda menunjukkan pemahaman terhadap nilai baik yang tertuang di dalam Pancasila, dan dapat menyebutkan contoh perilakunya.\n\nAnanda masih perlu didampingi dan diingatkan tentang pentingnya mengikuti aturan yang berlaku di kelas."
-      : "Menunjukkan sikap sesuai nilai Pancasila, namun perlu bimbingan lebih lanjut.";
-  }
-  if (m.includes("agama") || m.includes("budi pekerti")) {
-     return "Ananda menunjukkan sikap religius yang baik dan mampu memahami ajaran agama dengan baik.";
-  }
-  return nilai >= 80 ? "Hasil belajar baik dan memuaskan." : "Masih perlu bimbingan dan pendampingan.";
 }
 
 // --- Reusable Components ---
@@ -250,9 +279,13 @@ export default function App() {
     const wb = XLSX.utils.book_new();
 
     // Sheet 1: Settings
+    const exportSettings = { ...settings };
+    if (!['SMK', 'MAK'].includes(settings.jenjang)) {
+      delete (exportSettings as any).kejuruan;
+    }
     const settingsData = [
       ['Kunci', 'Nilai'],
-      ...Object.entries(settings).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
+      ...Object.entries(exportSettings).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
     ];
     const wsSettings = XLSX.utils.aoa_to_sheet(settingsData);
     XLSX.utils.book_append_sheet(wb, wsSettings, "Pengaturan");
@@ -738,21 +771,21 @@ export default function App() {
                   <Info className="w-5 h-5" />
                   <p className="text-sm">Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)</p>
                 </div>
-                <div className="overflow-x-auto bg-black/20 rounded-lg border border-white/10">
+                <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
-                    <thead className="bg-white/10 text-cyan-300">
+                    <thead className="text-cyan-300">
                       <tr>
-                        <th className="p-3 font-semibold sticky left-0 bg-[#1a1a2e] z-10 w-12">ID</th>
-                        <th className="p-3 font-semibold sticky left-[48px] bg-[#1a1a2e] z-10 min-w-[200px] border-r border-white/10">Nama Siswa</th>
-                        <th className="p-3 font-semibold min-w-[120px]">NISN</th>
-                        <th className="p-3 font-semibold min-w-[120px]">NIS</th>
-                        <th className="p-3 font-semibold w-20">Sakit</th>
-                        <th className="p-3 font-semibold w-20">Izin</th>
-                        <th className="p-3 font-semibold w-20">Alpha</th>
-                        <th className="p-3 font-semibold min-w-[250px]">Catatan Wali Kelas</th>
-                        <th className="p-3 font-semibold min-w-[250px]">Kokurikuler (Deskripsi)</th>
+                        <th className="p-3 font-semibold sticky left-0 top-0 bg-[#1a1a2e] z-30 w-12 border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
+                        <th className="p-3 font-semibold sticky left-[48px] top-0 bg-[#1a1a2e] z-30 min-w-[200px] border-r border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NISN</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NIS</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Sakit</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Izin</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Alpha</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[250px] border-b border-white/10">Catatan Wali Kelas</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[250px] border-b border-white/10">Kokurikuler (Deskripsi)</th>
                         {settings.ekskulList.map((eks, idx) => (
-                          <th key={idx} className="p-3 font-semibold min-w-[200px]">Ekstra: {eks}</th>
+                          <th key={idx} className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[200px] border-b border-white/10">Ekstra: {eks}</th>
                         ))}
                       </tr>
                     </thead>
@@ -790,14 +823,14 @@ export default function App() {
                   <Info className="w-5 h-5" />
                   <p className="text-sm">Isi nilai untuk setiap mata pelajaran. Nama siswa otomatis diambil dari tab Data Siswa.</p>
                 </div>
-                <div className="overflow-x-auto bg-black/20 rounded-lg border border-white/10">
+                <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
-                    <thead className="bg-white/10 text-cyan-300">
+                    <thead className="text-cyan-300">
                       <tr>
-                        <th className="p-3 font-semibold sticky left-0 bg-[#1a1a2e] z-10 w-12">ID</th>
-                        <th className="p-3 font-semibold sticky left-[48px] bg-[#1a1a2e] z-10 min-w-[200px] border-r border-white/10">Nama Siswa</th>
+                        <th className="p-3 font-semibold sticky left-0 top-0 bg-[#1a1a2e] z-30 w-12 border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
+                        <th className="p-3 font-semibold sticky left-[48px] top-0 bg-[#1a1a2e] z-30 min-w-[200px] border-r border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
                         {subjects.map((sub, idx) => (
-                          <th key={idx} className="p-3 font-semibold min-w-[120px] text-center" title={sub}>
+                          <th key={idx} className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] text-center border-b border-white/10" title={sub}>
                             <div className="truncate w-32 mx-auto">{sub}</div>
                           </th>
                         ))}
