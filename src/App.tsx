@@ -151,6 +151,37 @@ function generateDeskripsi(mapel: string, skor: string | number) {
   }
 }
 
+function generateKokurikulerDescription(input: string): string {
+  const t = input.trim().toLowerCase();
+  
+  if (!t) return "Siswa menunjukkan perkembangan karakter yang positif dengan mulai berpartisipasi aktif dalam kegiatan projek P5 bersama teman sebaya.";
+
+  if (t.length > 50) return input.charAt(0).toUpperCase() + input.slice(1);
+
+  const themes = [
+    { key: 'berkelanjutan', desc: 'Ananda sangat sadar dalam projek "Gaya Hidup Berkelanjutan", mampu menjaga lingkungan secara aktif serta mengaplikasikan hidup ramah lingkungan di kehidupan sehari-hari.' },
+    { key: 'kearifan', desc: 'Ananda berpartisipasi proaktif pada projek "Kearifan Lokal", menunjukkan sikap adaptif terhadap tradisi serta antusias menjaga kelestarian budaya daerah.' },
+    { key: 'bhinneka', desc: 'Ananda memiliki empati tinggi pada projek "Bhinneka Tunggal Ika", mengutamakan toleransi positif dan sangat menghargai keberagaman dalam pergaulan.' },
+    { key: 'bangun', desc: 'Ananda senantiasa energik dalam projek "Bangunlah Jiwa dan Raganya", mampu memelihara wawasan kesehatan fisik-mental serta berpartisipasi suportif dan positif.' },
+    { key: 'jiwa', desc: 'Ananda menunjukkan antusiasme yang luar biasa pada projek "Bangunlah Jiwa dan Raganya", menjaga kesehatan serta interaksi teman sebaya dengan baik.' },
+    { key: 'demokrasi', desc: 'Ananda mampu mengartikulasikan pemikiran logis pada projek "Suara Demokrasi", tanggap dalam musyawarah serta santun menghargai opini sesama rekan.' },
+    { key: 'rekayasa', desc: 'Ananda berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.' },
+    { key: 'teknologi', desc: 'Ananda berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.' },
+    { key: 'kewirausahaan', desc: 'Ananda berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.' },
+    { key: 'wirausaha', desc: 'Ananda berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.' },
+    { key: 'bekerja', desc: 'Ananda mengembangkan disiplin etos kerja gigih dalam projek "Kebekerjaan", senantiasa berpedoman kuat pada budaya produktif dan integritas profesional di setiap kesempatan.' },
+    { key: 'pancasila', desc: 'Ananda menginternalisasikan nilai-nilai Profil Pelajar Pancasila secara nyata, membiasakan adab kesantunan dan tanggung jawab moral di setiap aktivitas projek.' }
+  ];
+
+  for (const theme of themes) {
+    if (t.includes(theme.key)) {
+      return theme.desc;
+    }
+  }
+
+  return `Ananda menunjukkan proses perkembangan yang sangat berkesan dan tanggap mengenai "${input}". Ananda sanggup membangun interaksi kolaboratif secara komunikatif.`;
+}
+
 // --- Reusable Components ---
 const FormInput = ({ label, value, onChange, placeholder = '', type = 'text', className = '', readOnly = false }: any) => (
   <div className={`flex flex-col gap-1 ${className}`}>
@@ -271,7 +302,34 @@ export default function App() {
       localStorage.removeItem('raport_settings');
       localStorage.removeItem('raport_students');
       localStorage.removeItem('raport_subjects');
-      window.location.reload();
+      
+      setSettings({
+        jenjang: 'SD',
+        kelas: 'I',
+        kejuruan: SMK_PROGRAM[0],
+        semester: 'Ganjil',
+        tahunAjaran: '2023/2024',
+        namaSekolah: '',
+        alamatSekolah: '',
+        namaKepsek: '',
+        nipKepsek: '',
+        namaWali: '',
+        nipWali: '',
+        tempatTanggal: '',
+        ekskulList: ['Pramuka'],
+        muatanLokalList: ['Muatan Lokal']
+      });
+      setStudents(Array.from({ length: 35 }, (_, i) => ({
+        id: (i + 1).toString(),
+        nama: '', nisn: '', nis: '',
+        sakit: '', izin: '', alpha: '',
+        catatanWali: '', kokurikuler: '',
+        ekstra: {}, nilai: {}
+      })));
+      setSubjects(generateSubjects('SD', 'I', SMK_PROGRAM[0], ['Muatan Lokal']));
+      
+      setActiveTab('beranda');
+      alert("Data berhasil direset.");
     }
   };
 
@@ -545,88 +603,68 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
       
       {/* --- Cyberpunk Control Panel (Hidden on Print) --- */}
-      <div className="p-4 sm:p-8 print:hidden">
+      <div className="p-4 sm:p-6 print:hidden">
         <div className="max-w-7xl mx-auto">
           
-          <div className="bg-white/5 border border-cyan-400/50 rounded-xl p-6 mb-6 backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,255,0.1)]">
+          <div className="bg-white/5 border border-cyan-400/50 rounded-xl p-4 mb-4 backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,255,0.1)] flex flex-col gap-4">
+            
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h1 className="text-3xl font-bold flex items-center gap-3 text-cyan-400">
-                <FileText className="w-8 h-8" />
+              <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-cyan-400">
+                <FileText className="w-6 h-6" />
                 RAPORT DIGITAL BUILDER
               </h1>
-              <div className="flex flex-wrap gap-2 bg-black/40 p-1 rounded-lg border border-cyan-400/30 overflow-x-auto">
-                {[
-                  { id: 'beranda', label: 'Beranda', icon: Home },
-                  { id: 'data-siswa', label: 'Data Siswa', icon: Users },
-                  { id: 'nilai', label: 'Daftar Nilai', icon: BookOpen },
-                  { id: 'raport', label: 'Raport Digital', icon: Printer },
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${
-                      activeTab === tab.id 
-                        ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(0,255,255,0.5)]' 
-                        : 'text-cyan-200 hover:bg-white/10'
-                    }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                ))}
+              
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saveStatus === 'saving'}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold transition-all ${
+                    saveStatus === 'success' 
+                      ? 'bg-green-500 text-white' 
+                      : saveStatus === 'error'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                  } shadow-lg disabled:opacity-50`}
+                >
+                  <Save className={`w-4 h-4 ${saveStatus === 'saving' ? 'animate-pulse' : ''}`} />
+                  {saveStatus === 'saving' ? 'Menyimpan...' : saveStatus === 'success' ? 'Tersimpan!' : saveStatus === 'error' ? 'Gagal!' : 'Simpan Data'}
+                </button>
+
+                <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg">
+                  <Download className="w-4 h-4" /> Export
+                </button>
+
+                <label className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg cursor-pointer">
+                  <Upload className="w-4 h-4" /> Import
+                  <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
+                </label>
+
+                <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white transition-all border border-red-500/30">
+                  <Trash2 className="w-4 h-4" /> Reset
+                </button>
               </div>
             </div>
 
-            {/* --- Action Bar --- */}
-            <div className="mt-4 pt-4 border-t border-cyan-400/20 flex flex-wrap items-center gap-3">
-              <button
-                onClick={handleSave}
-                disabled={saveStatus === 'saving'}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-                  saveStatus === 'success' 
-                    ? 'bg-green-500 text-white' 
-                    : saveStatus === 'error'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                } shadow-lg disabled:opacity-50`}
-              >
-                <Save className={`w-4 h-4 ${saveStatus === 'saving' ? 'animate-pulse' : ''}`} />
-                {saveStatus === 'saving' ? 'Menyimpan...' : saveStatus === 'success' ? 'Tersimpan!' : saveStatus === 'error' ? 'Gagal!' : 'Simpan Data'}
-              </button>
-
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg"
-              >
-                <Download className="w-4 h-4" />
-                Export Excel
-              </button>
-
-              <label className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg cursor-pointer">
-                <Upload className="w-4 h-4" />
-                Import Excel
-                <input 
-                  type="file" 
-                  ref={fileInputRef}
-                  onChange={handleImport} 
-                  accept=".xlsx, .xls" 
-                  className="hidden" 
-                />
-              </label>
-
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white transition-all border border-red-500/30"
-              >
-                <Trash2 className="w-4 h-4" />
-                Reset
-              </button>
-
-              {saveStatus === 'idle' && (
-                <span className="text-xs text-cyan-400/60 ml-auto hidden sm:inline-block italic">
-                  *Data disimpan secara lokal di browser Anda.
-                </span>
-              )}
+            <div className="flex flex-wrap gap-1 bg-black/40 p-1 rounded-lg border border-cyan-400/30 overflow-x-auto">
+              {[
+                { id: 'beranda', label: 'Beranda', icon: Home },
+                { id: 'data-siswa', label: 'Data Siswa', icon: Users },
+                { id: 'nilai', label: 'Daftar Nilai', icon: BookOpen },
+                { id: 'raport', label: 'Raport Digital', icon: Printer },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center justify-center flex-1 sm:flex-none gap-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap text-sm ${
+                    activeTab === tab.id 
+                      ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(0,255,255,0.5)]' 
+                      : 'text-cyan-200 hover:bg-white/10'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -968,7 +1006,7 @@ export default function App() {
           <tbody>
             <tr>
               <td className="border border-black p-2 leading-relaxed min-h-[40px] whitespace-pre-line">
-                {printStudent.kokurikuler || 'Ananda sudah baik dalam penalaran kritis dan masih perlu pendampingan dalam mengomunikasikan gagasan dalam tema peduli lingkungan.'}
+                {generateKokurikulerDescription(printStudent.kokurikuler)}
               </td>
             </tr>
           </tbody>
