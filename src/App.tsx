@@ -15,6 +15,7 @@ interface Student {
   kokurikuler: string;
   ekstra: Record<string, string>;
   nilai: Record<string, string>;
+  keputusan?: string;
 }
 
 // --- Constants ---
@@ -80,6 +81,40 @@ function generateSubjects(jenjang: string, kelas: string, kejuruan: string, muat
 }
 
 const DEFAULT_SUBJECTS = generateSubjects('SD', 'I', SMK_PROGRAM[0], ['Muatan Lokal']);
+
+function isFinalKelas(jenjang: string, kelas: string): boolean {
+  const classes = KELAS_OPTIONS[jenjang];
+  if (!classes || classes.length === 0) return false;
+  return classes[classes.length - 1] === kelas;
+}
+
+function getNextKelas(jenjang: string, kelas: string): string {
+  const classes = KELAS_OPTIONS[jenjang];
+  if (!classes) return '';
+  const idx = classes.indexOf(kelas);
+  if (idx !== -1 && idx < classes.length - 1) {
+    return classes[idx + 1];
+  }
+  return '';
+}
+
+function getKelasTerbilang(kelas: string): string {
+  const mapping: Record<string, string> = {
+    'I': 'Satu',
+    'II': 'Dua',
+    'III': 'Tiga',
+    'IV': 'Empat',
+    'V': 'Lima',
+    'VI': 'Enam',
+    'VII': 'Tujuh',
+    'VIII': 'Delapan',
+    'IX': 'Sembilan',
+    'X': 'Sepuluh',
+    'XI': 'Sebelas',
+    'XII': 'Dua Belas'
+  };
+  return mapping[kelas] || kelas;
+}
 
 function getFase(jenjang: string, kelas: string) {
   if (jenjang === 'PAUD') return 'Fase Fondasi';
@@ -242,7 +277,7 @@ export default function App() {
       id: (i + 1).toString(),
       nama: '', nisn: '', nis: '',
       sakit: '', izin: '', alpha: '',
-      catatanWali: '',
+      catatanWali: '', keputusan: '',
       kokurikuler: '',
       ekstra: {},
       nilai: {}
@@ -323,7 +358,7 @@ export default function App() {
         id: (i + 1).toString(),
         nama: '', nisn: '', nis: '',
         sakit: '', izin: '', alpha: '',
-        catatanWali: '', kokurikuler: '',
+        catatanWali: '', keputusan: '', kokurikuler: '',
         ekstra: {}, nilai: {}
       })));
       setSubjects(generateSubjects('SD', 'I', SMK_PROGRAM[0], ['Muatan Lokal']));
@@ -349,9 +384,9 @@ export default function App() {
     XLSX.utils.book_append_sheet(wb, wsSettings, "Pengaturan");
 
     // Sheet 2: Data Siswa & Nilai (Combined for easier editing)
-    const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
+    const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
     const studentData = students.map(s => [
-      s.id, s.nama, s.nisn, s.nis, s.sakit, s.izin, s.alpha, s.catatanWali, s.kokurikuler, 
+      s.id, s.nama, s.nisn, s.nis, s.sakit, s.izin, s.alpha, s.catatanWali, s.keputusan || '', s.kokurikuler, 
       ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
       ...subjects.map(sub => s.nilai[sub] || '')
     ]);
@@ -415,6 +450,7 @@ export default function App() {
               s.izin = rowNorm['izin']?.toString() || '';
               s.alpha = rowNorm['alpha']?.toString() || '';
               s.catatanWali = rowNorm['catatanwalikelas']?.toString() || rowNorm['catatanwali']?.toString() || '';
+              s.keputusan = rowNorm['keputusan']?.toString() || '';
               s.kokurikuler = rowNorm['kokurikuler']?.toString() || '';
               s.ekstra = {};
               
@@ -821,6 +857,9 @@ export default function App() {
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Izin</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Alpha</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[250px] border-b border-white/10">Catatan Wali Kelas</th>
+                        {settings.semester === 'Genap' && (
+                          <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[200px] border-b border-white/10">Keputusan</th>
+                        )}
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[250px] border-b border-white/10">Kokurikuler (Deskripsi)</th>
                         {settings.ekskulList.map((eks, idx) => (
                           <th key={idx} className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[200px] border-b border-white/10">Ekstra: {eks}</th>
@@ -840,6 +879,33 @@ export default function App() {
                           <td className="p-2"><input type="number" value={s.izin} onChange={e => updateStudent(i, 'izin', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input type="number" value={s.alpha} onChange={e => updateStudent(i, 'alpha', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input value={s.catatanWali} onChange={e => updateStudent(i, 'catatanWali', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" placeholder="Catatan Wali Kelas..." /></td>
+                          {settings.semester === 'Genap' && (
+                            <td className="p-2">
+                              <select 
+                                value={s.keputusan || ''} 
+                                onChange={e => updateStudent(i, 'keputusan', e.target.value)} 
+                                className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none text-xs"
+                              >
+                                <option value="" className="bg-[#1a1a2e]">-- Pilih Keputusan --</option>
+                                {settings.jenjang === 'PAUD' ? (
+                                  <>
+                                    <option value="Selesai Fase Fondasi (Lulus)" className="bg-[#1a1a2e]">Selesai Fase Fondasi (Lulus)</option>
+                                    <option value="Melanjutkan ke SD" className="bg-[#1a1a2e]">Melanjutkan ke SD</option>
+                                  </>
+                                ) : isFinalKelas(settings.jenjang, settings.kelas) ? (
+                                  <>
+                                    <option value="Lulus" className="bg-[#1a1a2e]">Lulus</option>
+                                    <option value="Tidak Lulus" className="bg-[#1a1a2e]">Tidak Lulus</option>
+                                  </>
+                                ) : (
+                                  <>
+                                    <option value={`Naik ke kelas ${getNextKelas(settings.jenjang, settings.kelas)} (${getKelasTerbilang(getNextKelas(settings.jenjang, settings.kelas))})`} className="bg-[#1a1a2e]">{`Naik ke kelas ${getNextKelas(settings.jenjang, settings.kelas)} (${getKelasTerbilang(getNextKelas(settings.jenjang, settings.kelas))})`}</option>
+                                    <option value={`Tinggal di kelas ${settings.kelas} (${getKelasTerbilang(settings.kelas)})`} className="bg-[#1a1a2e]">{`Tinggal di kelas ${settings.kelas} (${getKelasTerbilang(settings.kelas)})`}</option>
+                                  </>
+                                )}
+                              </select>
+                            </td>
+                          )}
                           <td className="p-2"><input value={s.kokurikuler} onChange={e => updateStudent(i, 'kokurikuler', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" placeholder="Deskripsi Kokurikuler..." /></td>
                           {settings.ekskulList.map((eks, idx) => (
                             <td key={idx} className="p-2">
@@ -1096,6 +1162,31 @@ export default function App() {
             </tr>
           </tbody>
         </table>
+
+        {/* Table 7: Keputusan (Kenaikan Kelas / Kelulusan) */}
+        {settings.semester === 'Genap' && (
+          <table className="w-full border-collapse border border-black mb-6 text-[13px]">
+            <thead>
+              <tr className="bg-[#d9d9d9]">
+                <th className="border border-black p-2 text-left font-bold uppercase">Keputusan:</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-black p-3 leading-relaxed">
+                  <p>Berdasarkan pencapaian hasil belajar peserta didik pada semester 1 dan 2, yang bersangkutan ditetapkan:</p>
+                  <p className="font-bold mt-2 text-center text-sm tracking-wide">
+                    {printStudent.keputusan ? printStudent.keputusan.toUpperCase() : (
+                      settings.jenjang === 'PAUD' ? 'SELESAI FASE FONDASI (LULUS)' : 
+                      isFinalKelas(settings.jenjang, settings.kelas) ? 'LULUS' : 
+                      `NAIK KE KELAS ${getNextKelas(settings.jenjang, settings.kelas)} (${getKelasTerbilang(getNextKelas(settings.jenjang, settings.kelas))})`.toUpperCase()
+                    )}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        )}
 
         {/* Signatures */}
         <div className="flex justify-between text-[13px] mt-8 px-2">
