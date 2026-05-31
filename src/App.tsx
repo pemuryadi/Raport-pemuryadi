@@ -268,7 +268,8 @@ export default function App() {
     nipWali: '',
     tempatTanggal: '',
     ekskulList: ['Pramuka'] as string[],
-    muatanLokalList: ['Muatan Lokal'] as string[]
+    muatanLokalList: ['Muatan Lokal'] as string[],
+    logoSekolah: ''
   });
 
   // Students Data (35 rows)
@@ -352,7 +353,8 @@ export default function App() {
         nipWali: '',
         tempatTanggal: '',
         ekskulList: ['Pramuka'],
-        muatanLokalList: ['Muatan Lokal']
+        muatanLokalList: ['Muatan Lokal'],
+        logoSekolah: ''
       });
       setStudents(Array.from({ length: 35 }, (_, i) => ({
         id: (i + 1).toString(),
@@ -385,11 +387,20 @@ export default function App() {
 
     // Sheet 2: Data Siswa & Nilai (Combined for easier editing)
     const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
-    const studentData = students.map(s => [
-      s.id, s.nama, s.nisn, s.nis, s.sakit, s.izin, s.alpha, s.catatanWali, s.keputusan || '', s.kokurikuler, 
-      ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
-      ...subjects.map(sub => s.nilai[sub] || '')
-    ]);
+    const studentData = students.map(s => {
+      let keputusanVal = s.keputusan || '';
+      if (!keputusanVal && settings.semester === 'Genap') {
+        const nextK = getNextKelas(settings.jenjang, settings.kelas);
+        keputusanVal = settings.jenjang === 'PAUD' ? 'Selesai Fase Fondasi (Lulus)' :
+                       isFinalKelas(settings.jenjang, settings.kelas) ? 'Lulus' :
+                       `Naik ke kelas ${nextK} (${getKelasTerbilang(nextK)})`;
+      }
+      return [
+        s.id, s.nama, s.nisn, s.nis, s.sakit, s.izin, s.alpha, s.catatanWali, keputusanVal, s.kokurikuler, 
+        ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
+        ...subjects.map(sub => s.nilai[sub] || '')
+      ];
+    });
     const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentData]);
     XLSX.utils.book_append_sheet(wb, wsStudents, "Data Siswa dan Nilai");
 
@@ -491,6 +502,28 @@ export default function App() {
   };
 
   // --- Handlers ---
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1.5 * 1024 * 1024) {
+      alert("Ukuran logo terlalu besar (maksimal 1.5MB). Harap unggah berkas yang lebih kecil.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) {
+        setSettings({ ...settings, logoSekolah: evt.target.result as string });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setSettings({ ...settings, logoSekolah: '' });
+  };
+
   const handleJenjangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newJenjang = e.target.value;
     const newKelas = KELAS_OPTIONS[newJenjang][0];
@@ -763,6 +796,29 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormInput label="Tempat, Tanggal Rapor" placeholder="Contoh: Jakarta, 15 Desember 2023" value={settings.tempatTanggal} onChange={(e: any) => setSettings({...settings, tempatTanggal: e.target.value})} />
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm text-cyan-200 font-medium">Logo Sekolah (Watermark Rapor)</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="bg-black/40 border border-cyan-400/30 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:border-cyan-400 text-xs flex-1 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer"
+                        />
+                        {settings.logoSekolah && (
+                          <div className="flex items-center gap-1.5 shrink-0 bg-cyan-950/40 border border-cyan-400/30 rounded-lg px-2 py-1 h-9">
+                            <img src={settings.logoSekolah} alt="Logo" className="h-6 w-6 object-contain" />
+                            <button
+                              type="button"
+                              onClick={handleRemoveLogo}
+                              className="text-red-400 hover:text-red-200 text-xs font-semibold"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1007,8 +1063,19 @@ export default function App() {
       </div>
 
       {/* --- Formal Report Card (Visible on Screen when Raport tab is active, and always on Print) --- */}
-      <div className={`max-w-[21cm] mx-auto bg-white text-black p-8 sm:p-12 shadow-2xl print:shadow-none print:p-0 print:m-0 mb-12 ${activeTab === 'raport' ? 'block' : 'hidden print:block'}`}>
+      <div className={`relative max-w-[21cm] mx-auto bg-white text-black p-8 sm:p-12 shadow-2xl print:shadow-none print:p-0 print:m-0 mb-12 ${activeTab === 'raport' ? 'block' : 'hidden print:block'}`}>
         
+        {/* Logo Watermark Sekolah */}
+        {settings.logoSekolah && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+            <img 
+              src={settings.logoSekolah} 
+              alt="Watermark" 
+              className="w-[350px] h-[350px] object-contain opacity-[0.06] filter grayscale"
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 text-[13px] leading-relaxed">
           <div>
