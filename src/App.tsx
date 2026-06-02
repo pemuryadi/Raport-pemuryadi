@@ -292,11 +292,8 @@ export default function App() {
   // --- Exit Intent ---
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0) {
-        if (!sessionStorage.getItem('exitModalShown')) {
-          setShowExitModal(true);
-          sessionStorage.setItem('exitModalShown', 'true');
-        }
+      if (e.clientY <= 50) {
+        setShowExitModal(true);
       }
     };
     document.addEventListener('mouseleave', handleMouseLeave);
