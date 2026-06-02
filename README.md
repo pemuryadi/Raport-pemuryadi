@@ -1,20 +1,19 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Raport SKS Pemuryadi
 
-# Run and deploy your AI Studio app
+Aplikasi Raport SKS Digital untuk mempermudah guru dalam mengisi, mengelola, dan mencetak raport siswa sesuai dengan Kurikulum Merdeka.
 
-This contains everything you need to run your app locally.
+## Fitur
+- Pengisian Data Siswa
+- Pengisian Nilai Mata Pelajaran
+- Konfigurasi Ekstrakurikuler dan Muatan Lokal
+- Pencetakan Raport Digital dalam bentuk PDF
+- Export/Import Data menggunakan Excel (.xlsx)
 
-View your app in AI Studio: https://ai.studio/apps/ca4d941c-c02b-4759-8a02-01fd564f86d9
+## Cara Menjalankan Secara Lokal
 
-## Run Locally
+**Prasyarat:** Node.js
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
+1. Instalasi dependensi:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Jalankan aplikasi:
    `npm run dev`

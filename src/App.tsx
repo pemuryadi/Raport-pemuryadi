@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram } from 'lucide-react';
 import * as XLSX from 'xlsx';
-
+import { motion, AnimatePresence } from 'motion/react';
 // --- Types ---
 interface Student {
   id: string;
@@ -251,6 +251,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Global Settings
@@ -287,6 +288,20 @@ export default function App() {
 
   const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
   const [selectedPrintId, setSelectedPrintId] = useState('1');
+
+  // --- Exit Intent ---
+  useEffect(() => {
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0) {
+        if (!sessionStorage.getItem('exitModalShown')) {
+          setShowExitModal(true);
+          sessionStorage.setItem('exitModalShown', 'true');
+        }
+      }
+    };
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, []);
 
   // --- Persistence ---
   useEffect(() => {
@@ -684,6 +699,14 @@ export default function App() {
               </h1>
               
               <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href="/Modul%20Panduan%20Penggunaan%20Website%20raportsks.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white transition-all shadow-lg border border-cyan-400/30"
+                >
+                  <BookOpen className="w-4 h-4" /> Panduan
+                </a>
                 <button
                   onClick={handleSave}
                   disabled={saveStatus === 'saving'}
@@ -1351,6 +1374,58 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* --- Elegant Exit Intent Modal --- */}
+      <AnimatePresence>
+        {showExitModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0c29] border border-cyan-500/30 rounded-3xl w-full max-w-[420px] overflow-hidden shadow-[0_0_60px_rgba(0,255,255,0.2)] flex flex-col items-center p-8 text-center relative"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500"></div>
+              
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+                className="w-20 h-20 bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,255,255,0.3)] border border-cyan-400/20"
+              >
+                <Heart className="text-cyan-400 w-10 h-10" fill="currentColor" />
+              </motion.div>
+              
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-200 mb-3 leading-snug">
+                Terima kasih sudah menggunakan website raportsks.my.id
+              </h2>
+              
+              <p className="text-cyan-100/70 mb-8 text-sm leading-relaxed">
+                Support selalu kami agar dapat terus memberikan manfaat. Sampai jumpa kembali!
+              </p>
+              
+              <button 
+                onClick={() => setShowExitModal(false)}
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(0,255,255,0.3)] hover:shadow-[0_0_30px_rgba(0,255,255,0.5)] transform hover:-translate-y-1"
+              >
+                Tutup
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
