@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram } from 'lucide-react';
+import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram, Sparkles, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
 // --- Types ---
@@ -252,6 +252,7 @@ export default function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState<Record<number, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Global Settings
@@ -270,7 +271,8 @@ export default function App() {
     tempatTanggal: '',
     ekskulList: ['Pramuka'] as string[],
     muatanLokalList: ['Muatan Lokal'] as string[],
-    logoSekolah: ''
+    logoSekolah: '',
+    geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || ''
   });
 
   // Students Data (35 rows)
@@ -366,7 +368,8 @@ export default function App() {
         tempatTanggal: '',
         ekskulList: ['Pramuka'],
         muatanLokalList: ['Muatan Lokal'],
-        logoSekolah: ''
+        logoSekolah: '',
+        geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || ''
       });
       setStudents(Array.from({ length: 35 }, (_, i) => ({
         id: (i + 1).toString(),
@@ -647,6 +650,60 @@ export default function App() {
 
   const handlePrint = () => {
     setShowPrintModal(true);
+  };
+
+  const generateAICatatan = async (index: number) => {
+    const student = students[index];
+    const apiKey = settings.geminiApiKey;
+
+    if (!apiKey) {
+      alert("API Key Gemini belum diatur. Silakan masukkan di Pengaturan Global.");
+      return;
+    }
+
+    if (!student.nama) {
+      alert("Mohon isi nama siswa terlebih dahulu.");
+      return;
+    }
+
+    setIsGeneratingAI(prev => ({ ...prev, [index]: true }));
+
+    // Hitung rata-rata nilai untuk konteks AI
+    const nilaiValues = Object.values(student.nilai).map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
+    const avgNilai = nilaiValues.length ? (nilaiValues.reduce((a, b) => a + b, 0) / nilaiValues.length).toFixed(1) : 'Belum ada nilai';
+
+    const prompt = `Buatkan Catatan Wali Kelas yang SANGAT POSITIF, MEMOTIVASI, dan SINGKAT (1-2 kalimat saja) untuk siswa bernama ${student.nama}. 
+Informasi absensi: Sakit ${student.sakit || 0}, Izin ${student.izin || 0}, Alpha ${student.alpha || 0}. 
+Rata-rata nilainya: ${avgNilai}.
+PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan.`;
+
+    try {
+      const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\${apiKey}\`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 100 }
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error.message || "Gagal menghubungi Gemini AI");
+      }
+
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (generatedText) {
+        updateStudent(index, 'catatanWali', generatedText.trim().replace(/"/g, ''));
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(\`Gagal generate Catatan Wali Kelas: \${error.message}\`);
+    } finally {
+      setIsGeneratingAI(prev => ({ ...prev, [index]: false }));
+    }
   };
 
   // --- Calculations ---
@@ -954,7 +1011,19 @@ export default function App() {
                           <td className="p-2"><input type="number" value={s.sakit} onChange={e => updateStudent(i, 'sakit', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input type="number" value={s.izin} onChange={e => updateStudent(i, 'izin', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input type="number" value={s.alpha} onChange={e => updateStudent(i, 'alpha', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
-                          <td className="p-2"><input value={s.catatanWali} onChange={e => updateStudent(i, 'catatanWali', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" placeholder="Catatan Wali Kelas..." /></td>
+                          <td className="p-2 relative min-w-[250px]">
+                            <div className="flex gap-1">
+                              <input value={s.catatanWali} onChange={e => updateStudent(i, 'catatanWali', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none pr-8" placeholder="Catatan Wali Kelas..." />
+                              <button
+                                onClick={() => generateAICatatan(i)}
+                                disabled={isGeneratingAI[i]}
+                                title="Generate Catatan dengan AI"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 disabled:opacity-50 transition-colors"
+                              >
+                                {isGeneratingAI[i] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </td>
                           {settings.semester === 'Genap' && (
                             <td className="p-2">
                               <select 
