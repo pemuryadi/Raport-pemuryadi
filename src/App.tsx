@@ -700,9 +700,9 @@ export default function App() {
                   href="/Modul%20Panduan%20Penggunaan%20Website%20raportsks.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white transition-all shadow-lg border border-cyan-400/30"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white transition-all shadow-[0_0_15px_rgba(192,38,211,0.4)] border border-fuchsia-400/50 animate-pulse"
                 >
-                  <BookOpen className="w-4 h-4" /> Panduan
+                  <BookOpen className="w-4 h-4" /> Modul Panduan
                 </a>
                 <button
                   onClick={handleSave}
