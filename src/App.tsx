@@ -272,7 +272,7 @@ export default function App() {
     ekskulList: ['Pramuka'] as string[],
     muatanLokalList: ['Muatan Lokal'] as string[],
     logoSekolah: '',
-    geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || ''
+    geminiApiKey: (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
   });
 
   // Students Data (35 rows)
@@ -369,7 +369,7 @@ export default function App() {
         ekskulList: ['Pramuka'],
         muatanLokalList: ['Muatan Lokal'],
         logoSekolah: '',
-        geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || ''
+        geminiApiKey: (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
       });
       setStudents(Array.from({ length: 35 }, (_, i) => ({
         id: (i + 1).toString(),
@@ -678,7 +678,7 @@ Rata-rata nilainya: ${avgNilai}.
 PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan.`;
 
     try {
-      const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\${apiKey}\`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -700,7 +700,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
       }
     } catch (error: any) {
       console.error(error);
-      alert(\`Gagal generate Catatan Wali Kelas: \${error.message}\`);
+      alert(`Gagal generate Catatan Wali Kelas: ${error.message}`);
     } finally {
       setIsGeneratingAI(prev => ({ ...prev, [index]: false }));
     }
