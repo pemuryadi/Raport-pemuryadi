@@ -189,7 +189,7 @@ function generateDeskripsi(mapel: string, skor: string | number) {
 function generateKokurikulerDescription(input: string): string {
   const t = input.trim().toLowerCase();
   
-  if (!t) return "Siswa menunjukkan perkembangan karakter yang positif dengan mulai berpartisipasi aktif dalam kegiatan projek P5 bersama teman sebaya.";
+  if (!t) return "";
 
   if (t.length > 50) return input.charAt(0).toUpperCase() + input.slice(1);
 
@@ -737,6 +737,22 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
     .filter(eks => printStudent.ekstra && printStudent.ekstra[eks])
     .map(eks => ({ nama: eks, ket: printStudent.ekstra[eks] }));
 
+  const rankedStudents = useMemo(() => {
+    return activeStudents.map(student => {
+      let total = 0;
+      let count = 0;
+      subjects.forEach(sub => {
+        const val = parseFloat(student.nilai[sub]);
+        if (!isNaN(val)) {
+          total += val;
+          count++;
+        }
+      });
+      const average = count > 0 ? (total / count).toFixed(2) : '0.00';
+      return { ...student, total, average: Number(average) };
+    }).sort((a, b) => b.total - a.total).map((s, index) => ({ ...s, rank: index + 1 }));
+  }, [activeStudents, subjects]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
       
@@ -748,7 +764,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-cyan-400">
-                <FileText className="w-6 h-6" />
+                <img src="/logo raport.png" alt="Logo Raport" className="h-8 object-contain drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
                 RAPORT DIGITAL BUILDER
               </h1>
               
@@ -1013,15 +1029,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                           <td className="p-2"><input type="number" value={s.alpha} onChange={e => updateStudent(i, 'alpha', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2 relative min-w-[250px]">
                             <div className="flex gap-1">
-                              <input value={s.catatanWali} onChange={e => updateStudent(i, 'catatanWali', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none pr-8" placeholder="Catatan Wali Kelas..." />
-                              <button
-                                onClick={() => generateAICatatan(i)}
-                                disabled={isGeneratingAI[i]}
-                                title="Generate Catatan dengan AI"
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 disabled:opacity-50 transition-colors"
-                              >
-                                {isGeneratingAI[i] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                              </button>
+                              <input value={s.catatanWali} onChange={e => updateStudent(i, 'catatanWali', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" placeholder="Catatan Wali Kelas..." />
                             </div>
                           </td>
                           {settings.semester === 'Genap' && (
@@ -1142,6 +1150,37 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                   <div className="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg flex items-center gap-2 text-yellow-200">
                     <AlertCircle className="w-5 h-5 text-yellow-400" />
                     Data siswa ini masih kosong. Silakan isi di tab Data Siswa.
+                  </div>
+                )}
+
+                {/* --- Rekapitulasi & Peringkat --- */}
+                {activeStudents.length > 0 && (
+                  <div className="bg-black/20 p-6 rounded-xl border border-white/10 mt-6 shadow-inner print:hidden">
+                    <h3 className="text-xl font-bold text-cyan-300 mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+                      <Users className="w-5 h-5" /> Rekapitulasi Nilai & Peringkat Kelas
+                    </h3>
+                    <div className="overflow-x-auto rounded-lg border border-white/10">
+                      <table className="w-full text-sm text-left whitespace-nowrap">
+                        <thead className="bg-[#1a1a2e] text-cyan-300">
+                          <tr>
+                            <th className="p-3 font-semibold text-center w-16 border-b border-white/10">Peringkat</th>
+                            <th className="p-3 font-semibold border-b border-white/10">Nama Siswa</th>
+                            <th className="p-3 font-semibold text-center border-b border-white/10">Total Nilai</th>
+                            <th className="p-3 font-semibold text-center border-b border-white/10">Rata-rata</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rankedStudents.map((s) => (
+                            <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                              <td className="p-3 text-center text-cyan-400 font-bold">#{s.rank}</td>
+                              <td className="p-3 font-medium text-white">{s.nama}</td>
+                              <td className="p-3 text-center font-mono text-emerald-300">{s.total}</td>
+                              <td className="p-3 text-center font-mono text-yellow-300">{s.average}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </div>
