@@ -271,8 +271,7 @@ export default function App() {
     tempatTanggal: '',
     ekskulList: ['Pramuka'] as string[],
     muatanLokalList: ['Muatan Lokal'] as string[],
-    logoSekolah: '',
-    geminiApiKey: (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
+    logoSekolah: ''
   });
 
   // Students Data (35 rows)
@@ -368,9 +367,7 @@ export default function App() {
         tempatTanggal: '',
         ekskulList: ['Pramuka'],
         muatanLokalList: ['Muatan Lokal'],
-        logoSekolah: '',
-        geminiApiKey: (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
-      });
+        logoSekolah: ''
       setStudents(Array.from({ length: 35 }, (_, i) => ({
         id: (i + 1).toString(),
         nama: '', nisn: '', nis: '',
@@ -654,12 +651,6 @@ export default function App() {
 
   const generateAICatatan = async (index: number) => {
     const student = students[index];
-    const apiKey = settings.geminiApiKey;
-
-    if (!apiKey) {
-      alert("API Key Gemini belum diatur. Silakan masukkan di Pengaturan Global.");
-      return;
-    }
 
     if (!student.nama) {
       alert("Mohon isi nama siswa terlebih dahulu.");
@@ -678,15 +669,12 @@ Rata-rata nilainya: ${avgNilai}.
 PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan.`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 100 }
-        })
+        body: JSON.stringify({ prompt })
       });
 
       const data = await response.json();
