@@ -503,7 +503,9 @@ export default function App() {
 
           studentsJson.forEach((row: any, index: number) => {
             if (index < 35) {
-              const s = newStudents[index];
+              const s = { ...newStudents[index] };
+              s.ekstra = { ...s.ekstra };
+              s.nilai = { ...s.nilai };
               
               const rowNorm: any = {};
               for(let key in row) rowNorm[normalize(key)] = row[key];
@@ -537,8 +539,12 @@ export default function App() {
                   s.nilai[sub] = rowNorm[normSub].toString();
                 } else if (row[sub] !== undefined) {
                   s.nilai[sub] = row[sub].toString();
+                } else {
+                  s.nilai[sub] = '';
                 }
               });
+              
+              newStudents[index] = s;
             }
           });
           setStudents(newStudents);
