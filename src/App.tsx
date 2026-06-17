@@ -8,6 +8,7 @@ interface Student {
   nama: string;
   nisn: string;
   nis: string;
+  agama: string;
   sakit: string;
   izin: string;
   alpha: string;
@@ -131,12 +132,12 @@ function getFase(jenjang: string, kelas: string) {
   return '';
 }
 
-function generateDeskripsi(mapel: string, skor: string | number) {
+function generateDeskripsi(mapel: string, skor: string | number, agamaSiswa: string = '') {
   if (!mapel || skor === '') return '';
   const nilai = Number(skor);
   const m = mapel.toLowerCase();
   
-  let capaianTertinggi = "memahami berbagai capaian pembelajaran secara menyeluruh";
+  let capaianTertinggi = "memahami berbagai capaian pembelajaran secara menyeluruh sesuai standar BSKAP No. 046/H/KR/2025";
   let capaianTerendah = "penguasaan materi yang lebih kompleks";
 
   if (m.includes("matematika")) {
@@ -149,8 +150,23 @@ function generateDeskripsi(mapel: string, skor: string | number) {
     capaianTertinggi = "memahami nilai-nilai luhur Pancasila, menghargai kebhinekaan, dan mentaati norma yang berlaku";
     capaianTerendah = "penerapan penalaran analisis kritis pada studi kasus hak dan kewajiban warga negara";
   } else if (m.includes("agama") || m.includes("budi pekerti") || m.includes("akhlak") || m.includes("qur'an") || m.includes("fikih")) {
-    capaianTertinggi = "memahami pilar keimanan, tata cara ibadah sesuai syariat, dan mengamalkan sikap religius";
-    capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan telaah mendalam pada teks keagamaan";
+    let agama = agamaSiswa.toLowerCase();
+    if (agama.includes('kristen') || agama.includes('protestan') || agama.includes('katolik')) {
+      capaianTertinggi = "memahami pilar keimanan, tata cara ibadah sesuai ajaran kasih Kristus, dan mengamalkan sikap religius";
+      capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan pemahaman mendalam pada Alkitab";
+    } else if (agama.includes('hindu')) {
+      capaianTertinggi = "memahami pilar keimanan, tata cara persembahyangan sesuai ajaran agama Hindu, dan mengamalkan sikap religius";
+      capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan telaah mendalam pada kitab suci Weda";
+    } else if (agama.includes('buddha') || agama.includes('budha')) {
+      capaianTertinggi = "memahami ajaran moral, tata cara puja bakti sesuai ajaran agama Buddha, dan mengamalkan sikap religius";
+      capaianTerendah = "kedisiplinan implementasi kebaktian mandiri dan telaah mendalam pada kitab suci Tripitaka";
+    } else if (agama.includes('konghucu')) {
+      capaianTertinggi = "memahami jalan suci, tata cara ibadah sesuai ajaran moral agama Konghucu, dan mengamalkan sikap religius";
+      capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan telaah mendalam pada kitab suci Si Shu";
+    } else {
+      capaianTertinggi = "memahami pilar keimanan, tata cara ibadah sesuai syariat, dan mengamalkan sikap religius";
+      capaianTerendah = "kedisiplinan implementasi ibadah mandiri dan telaah mendalam pada teks keagamaan";
+    }
   } else if (m.includes("ipas") || m.includes("alam") || m.includes("biologi") || m.includes("fisika") || m.includes("kimia")) {
     capaianTertinggi = "memahami konsep ilmu pengetahuan atau sains yang dipelajari dan menunjukkan kepedulian pada alam";
     capaianTerendah = "keterampilan melakukan observasi ilmiah dan akurasi menyajikan laporan hasil eksperimen";
@@ -167,8 +183,8 @@ function generateDeskripsi(mapel: string, skor: string | number) {
     capaianTertinggi = "mengekspresikan daya imajinasi melalui karya original yang memiliki nilai estetika dan apresiatif";
     capaianTerendah = "kerapian dalam tahap pengerjaan penyelesaian akhir (finishing) serta keunikan detail pada karya seni";
   } else if (m.includes("informatika") || m.includes("komputer") || m.includes("tik")) {
-    capaianTertinggi = "mengoperasikan perangkat lunak dasar dengan presisi serta menunjukkan etika literasi digital yang cakap";
-    capaianTerendah = "pemahaman penerapan bahasa algoritma terstruktur dan perancangan dasar arsitektur pemrograman";
+    capaianTertinggi = "mengoperasikan perangkat lunak dasar dengan presisi, menerapkan pemikiran komputasional (koding), serta memahami konsep kecerdasan buatan (AI)";
+    capaianTerendah = "pemahaman logis penerapan algoritma terstruktur dan literasi digital secara cakap";
   } else if (m.includes("kejuruan") || m.includes("praktik") || m.includes("dasar-dasar") || m.includes("konsentrasi") || m.includes("pilihan") || m.includes("lokal")) {
     capaianTertinggi = "menerapkan kompetensi sasaran keahlian dan menjalankan penerapan Prosedur Operasional Standar (SOP)";
     capaianTerendah = "kecepatan taktis serta tingkat kemandirian penuh dalam eksekusi proyek skala level industri";
@@ -278,7 +294,7 @@ export default function App() {
   const [students, setStudents] = useState<Student[]>(
     Array.from({ length: 35 }, (_, i) => ({
       id: (i + 1).toString(),
-      nama: '', nisn: '', nis: '',
+      nama: '', nisn: '', nis: '', agama: '',
       sakit: '', izin: '', alpha: '',
       catatanWali: '', keputusan: '',
       kokurikuler: '',
@@ -368,9 +384,10 @@ export default function App() {
         ekskulList: ['Pramuka'],
         muatanLokalList: ['Muatan Lokal'],
         logoSekolah: ''
+      });
       setStudents(Array.from({ length: 35 }, (_, i) => ({
         id: (i + 1).toString(),
-        nama: '', nisn: '', nis: '',
+        nama: '', nisn: '', nis: '', agama: '',
         sakit: '', izin: '', alpha: '',
         catatanWali: '', keputusan: '', kokurikuler: '',
         ekstra: {}, nilai: {}
@@ -398,7 +415,7 @@ export default function App() {
     XLSX.utils.book_append_sheet(wb, wsSettings, "Pengaturan");
 
     // Sheet 2: Data Siswa & Nilai (Combined for easier editing)
-    const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
+    const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Agama', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
     const studentData = students.map(s => {
       let keputusanVal = s.keputusan || '';
       if (!keputusanVal && settings.semester === 'Genap') {
@@ -408,7 +425,7 @@ export default function App() {
                        `Naik ke kelas ${nextK} (${getKelasTerbilang(nextK)})`;
       }
       return [
-        s.id, s.nama, s.nisn, s.nis, s.sakit, s.izin, s.alpha, s.catatanWali, keputusanVal, s.kokurikuler, 
+        s.id, s.nama, s.nisn, s.nis, s.agama, s.sakit, s.izin, s.alpha, s.catatanWali, keputusanVal, s.kokurikuler, 
         ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
         ...subjects.map(sub => s.nilai[sub] || '')
       ];
@@ -469,6 +486,7 @@ export default function App() {
               s.nama = rowNorm['nama']?.toString() || '';
               s.nisn = rowNorm['nisn']?.toString() || '';
               s.nis = rowNorm['nis']?.toString() || '';
+              s.agama = rowNorm['agama']?.toString() || '';
               s.sakit = rowNorm['sakit']?.toString() || '';
               s.izin = rowNorm['izin']?.toString() || '';
               s.alpha = rowNorm['alpha']?.toString() || '';
@@ -990,6 +1008,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                         <th className="p-3 font-semibold sticky left-[48px] top-0 bg-[#1a1a2e] z-30 min-w-[200px] border-r border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NISN</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NIS</th>
+                        <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">Agama</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Sakit</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Izin</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 w-20 border-b border-white/10">Alpha</th>
@@ -1012,6 +1031,17 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                           </td>
                           <td className="p-2"><input value={s.nisn} onChange={e => updateStudent(i, 'nisn', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input value={s.nis} onChange={e => updateStudent(i, 'nis', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
+                          <td className="p-2">
+                            <select value={s.agama || ''} onChange={e => updateStudent(i, 'agama', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none text-xs">
+                              <option value="" className="bg-[#1a1a2e]">-</option>
+                              <option value="Islam" className="bg-[#1a1a2e]">Islam</option>
+                              <option value="Kristen" className="bg-[#1a1a2e]">Kristen</option>
+                              <option value="Katolik" className="bg-[#1a1a2e]">Katolik</option>
+                              <option value="Hindu" className="bg-[#1a1a2e]">Hindu</option>
+                              <option value="Buddha" className="bg-[#1a1a2e]">Buddha</option>
+                              <option value="Konghucu" className="bg-[#1a1a2e]">Konghucu</option>
+                            </select>
+                          </td>
                           <td className="p-2"><input type="number" value={s.sakit} onChange={e => updateStudent(i, 'sakit', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input type="number" value={s.izin} onChange={e => updateStudent(i, 'izin', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
                           <td className="p-2"><input type="number" value={s.alpha} onChange={e => updateStudent(i, 'alpha', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
@@ -1227,7 +1257,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                   <td className="border border-black p-2 text-center align-top">{i + 1}</td>
                   <td className="border border-black p-2 align-top">{sub}</td>
                   <td className="border border-black p-2 text-center align-top font-bold">{skor}</td>
-                  <td className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{generateDeskripsi(sub, skor)}</td>
+                  <td className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{generateDeskripsi(sub, skor, printStudent.agama)}</td>
                 </tr>
               );
             })}
