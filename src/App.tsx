@@ -543,6 +543,45 @@ export default function App() {
           });
           setStudents(newStudents);
           setSubjects(newSubjects);
+
+          // Auto-populate konversi state based on imported data
+          const newKonversi: Record<string, {
+            asliTertinggi: number,
+            asliTerendah: number,
+            harapanTertinggi: number,
+            harapanTerendah: number
+          }> = {};
+
+          newSubjects.forEach(sub => {
+            let min = 100, max = 0, count = 0;
+            newStudents.forEach(s => {
+              const val = parseFloat(s.nilai[sub]);
+              if (!isNaN(val)) {
+                if (val < min) min = val;
+                if (val > max) max = val;
+                count++;
+              }
+            });
+            
+            // if no values were found, fallback to default 100 and 30
+            if (count === 0) {
+              min = 30;
+              max = 100;
+            }
+
+            // Fallback for edge cases where all students have the same score, avoiding division by zero in conversion
+            if (min === max && count > 0) {
+              min = Math.max(0, min - 10);
+            }
+
+            newKonversi[sub] = {
+              asliTertinggi: max,
+              asliTerendah: min,
+              harapanTertinggi: 100,
+              harapanTerendah: 75
+            };
+          });
+          setKonversi(newKonversi);
         }
 
         alert('Data berhasil diimpor!');
