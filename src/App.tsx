@@ -306,12 +306,30 @@ export default function App() {
   const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
   const [selectedPrintId, setSelectedPrintId] = useState('1');
 
-  const [konversi, setKonversi] = useState({
-    asliTertinggi: 100,
-    asliTerendah: 30,
-    harapanTertinggi: 100,
-    harapanTerendah: 75
-  });
+  const [konversi, setKonversi] = useState<Record<string, {
+    asliTertinggi: number,
+    asliTerendah: number,
+    harapanTertinggi: number,
+    harapanTerendah: number
+  }>>({});
+
+  // Initialize or update konversi state when subjects change
+  useEffect(() => {
+    setKonversi(prev => {
+      const newKonversi = { ...prev };
+      subjects.forEach(sub => {
+        if (!newKonversi[sub]) {
+          newKonversi[sub] = {
+            asliTertinggi: 100,
+            asliTerendah: 30,
+            harapanTertinggi: 100,
+            harapanTerendah: 75
+          };
+        }
+      });
+      return newKonversi;
+    });
+  }, [subjects]);
 
   // --- Exit Intent ---
   useEffect(() => {
@@ -720,35 +738,39 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
   };
 
   const handleKonversi = () => {
-    if (window.confirm('Apakah Anda yakin ingin mengonversi semua nilai? Tindakan ini akan mengubah seluruh nilai yang sudah diisi berdasarkan rumus konversi.')) {
-      const { asliTertinggi, asliTerendah, harapanTertinggi, harapanTerendah } = konversi;
-      const NCmax = asliTertinggi;
-      const NCmin = asliTerendah;
-      const NHmax = harapanTertinggi;
-      const NHmin = harapanTerendah;
-
-      // Prevent division by zero
-      if (NCmax === NCmin) {
-        alert('Nilai Asli Tertinggi dan Terendah tidak boleh sama.');
-        return;
-      }
-
+    if (window.confirm('Apakah Anda yakin ingin mengonversi semua nilai? Tindakan ini akan mengubah seluruh nilai yang sudah diisi berdasarkan rumus konversi untuk masing-masing mata pelajaran.')) {
+      
+      let hasError = false;
       const newStudents = students.map(s => {
         const newNilai = { ...s.nilai };
         for (const sub in newNilai) {
           const val = parseFloat(newNilai[sub]);
-          if (!isNaN(val)) {
+          if (!isNaN(val) && konversi[sub]) {
+            const { asliTertinggi, asliTerendah, harapanTertinggi, harapanTerendah } = konversi[sub];
+            const NCmax = asliTertinggi;
+            const NCmin = asliTerendah;
+            const NHmax = harapanTertinggi;
+            const NHmin = harapanTerendah;
+
+            if (NCmax === NCmin) {
+              hasError = true;
+              continue;
+            }
+
             let nk = NHmin + ((val - NCmin) / (NCmax - NCmin)) * (NHmax - NHmin);
             nk = Math.round(nk);
-            // Optional: Clamp values if you want them strictly within NHmin to NHmax
-            // nk = Math.max(NHmin, Math.min(NHmax, nk));
             newNilai[sub] = nk.toString();
           }
         }
         return { ...s, nilai: newNilai };
       });
-      setStudents(newStudents);
-      alert('Konversi nilai berhasil!');
+
+      if (hasError) {
+        alert('Gagal mengonversi beberapa mata pelajaran karena Nilai Asli Tertinggi dan Terendah sama (tidak boleh nol pembagian).');
+      } else {
+        setStudents(newStudents);
+        alert('Konversi nilai berhasil untuk semua mata pelajaran!');
+      }
     }
   };
 
@@ -858,6 +880,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                 { id: 'beranda', label: 'Beranda', icon: Home },
                 { id: 'data-siswa', label: 'Data Siswa', icon: Users },
                 { id: 'nilai', label: 'Daftar Nilai', icon: BookOpen },
+                { id: 'konversi', label: 'Konversi Nilai', icon: Sparkles },
                 { id: 'raport', label: 'Raport Digital', icon: Printer },
               ].map(tab => (
                 <button
@@ -1138,54 +1161,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                   <Info className="w-5 h-5" />
                   <p className="text-sm">Isi nilai untuk setiap mata pelajaran. Nama siswa otomatis diambil dari tab Data Siswa.</p>
                 </div>
-                
-                <div className="flex flex-col xl:flex-row gap-4">
-                  {/* Form Konversi Nilai */}
-                  <div className="xl:w-[300px] flex-shrink-0 bg-black/20 p-4 rounded-lg border border-white/10 shadow-inner flex flex-col gap-4">
-                    <h3 className="font-bold text-cyan-400 border-b border-white/10 pb-2 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5" /> Konversi Nilai
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      <div className="bg-red-950/40 p-3 rounded-lg border border-red-500/30">
-                        <h4 className="text-red-400 font-semibold mb-3 text-sm text-center">NILAI ASLI</h4>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-white/70">Tertinggi</label>
-                            <input type="number" value={konversi.asliTertinggi} onChange={(e) => setKonversi({...konversi, asliTertinggi: Number(e.target.value)})} className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-yellow-400" />
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-white/70">Terendah</label>
-                            <input type="number" value={konversi.asliTerendah} onChange={(e) => setKonversi({...konversi, asliTerendah: Number(e.target.value)})} className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-yellow-400" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-green-950/40 p-3 rounded-lg border border-green-500/30">
-                        <h4 className="text-green-400 font-semibold mb-3 text-sm text-center">NILAI HARAPAN</h4>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-white/70">Tertinggi</label>
-                            <input type="number" value={konversi.harapanTertinggi} onChange={(e) => setKonversi({...konversi, harapanTertinggi: Number(e.target.value)})} className="bg-white/10 border border-white/20 text-white rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-white" />
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-white/70">Terendah</label>
-                            <input type="number" value={konversi.harapanTerendah} onChange={(e) => setKonversi({...konversi, harapanTerendah: Number(e.target.value)})} className="bg-white/10 border border-white/20 text-white rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-white" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={handleKonversi}
-                        className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 rounded-lg shadow-[0_0_10px_rgba(0,255,255,0.2)] transition-all flex justify-center items-center gap-2"
-                      >
-                        <Save className="w-4 h-4" /> Terapkan Konversi
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Tabel Daftar Nilai */}
-                  <div className="flex-1 overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
+                <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-cyan-300">
                       <tr>
@@ -1220,6 +1196,106 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: KONVERSI NILAI */}
+            {activeTab === 'konversi' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-cyan-300 mb-4">
+                  <Info className="w-5 h-5" />
+                  <p className="text-sm">Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.</p>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                  <div className="flex justify-between items-center bg-black/20 p-4 rounded-lg border border-white/10 shadow-inner">
+                    <h3 className="font-bold text-cyan-400 flex items-center gap-2 text-lg">
+                      <Sparkles className="w-6 h-6" /> Pengaturan Konversi per Mata Pelajaran
+                    </h3>
+                    <button 
+                      onClick={handleKonversi}
+                      className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-[0_0_15px_rgba(0,255,255,0.3)] transition-all flex justify-center items-center gap-2"
+                    >
+                      <Save className="w-5 h-5" /> Terapkan Konversi Semua Mata Pelajaran
+                    </button>
+                  </div>
+
+                  <div className="overflow-auto max-h-[60vh] bg-black/20 rounded-lg border border-white/10 shadow-inner">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                      <thead className="bg-[#1a1a2e] text-cyan-300">
+                        <tr>
+                          <th className="p-4 font-semibold border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10 w-[30%]">Mata Pelajaran</th>
+                          <th className="p-4 font-semibold text-center border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10 bg-red-950/40">Nilai Asli Max</th>
+                          <th className="p-4 font-semibold text-center border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10 bg-red-950/40">Nilai Asli Min</th>
+                          <th className="p-4 font-semibold text-center border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10 bg-green-950/40">Nilai Harapan Max</th>
+                          <th className="p-4 font-semibold text-center border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10 bg-green-950/40">Nilai Harapan Min</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {subjects.map((sub, idx) => {
+                          const config = konversi[sub] || { asliTertinggi: 100, asliTerendah: 30, harapanTertinggi: 100, harapanTerendah: 75 };
+                          
+                          let min = 100, max = 0, count = 0;
+                          students.forEach(s => {
+                            const val = parseFloat(s.nilai[sub]);
+                            if (!isNaN(val)) {
+                              if (val < min) min = val;
+                              if (val > max) max = val;
+                              count++;
+                            }
+                          });
+
+                          return (
+                            <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                              <td className="p-4 border-r border-white/5">
+                                <div className="font-medium text-white whitespace-normal leading-tight">{sub}</div>
+                                {count > 0 ? (
+                                  <div className="text-xs text-cyan-400 mt-1 flex gap-3">
+                                    <span>Min saat ini: {min}</span>
+                                    <span>Max saat ini: {max}</span>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-gray-500 mt-1">Belum ada nilai</div>
+                                )}
+                              </td>
+                              <td className="p-3 bg-red-900/10 text-center">
+                                <input 
+                                  type="number" 
+                                  value={config.asliTertinggi} 
+                                  onChange={(e) => setKonversi({...konversi, [sub]: {...config, asliTertinggi: Number(e.target.value)}})} 
+                                  className="bg-black/50 border border-red-500/30 rounded px-3 py-2 w-24 text-center text-white focus:outline-none focus:border-red-400" 
+                                />
+                              </td>
+                              <td className="p-3 bg-red-900/10 text-center border-r border-white/5">
+                                <input 
+                                  type="number" 
+                                  value={config.asliTerendah} 
+                                  onChange={(e) => setKonversi({...konversi, [sub]: {...config, asliTerendah: Number(e.target.value)}})} 
+                                  className="bg-black/50 border border-red-500/30 rounded px-3 py-2 w-24 text-center text-white focus:outline-none focus:border-red-400" 
+                                />
+                              </td>
+                              <td className="p-3 bg-green-900/10 text-center">
+                                <input 
+                                  type="number" 
+                                  value={config.harapanTertinggi} 
+                                  onChange={(e) => setKonversi({...konversi, [sub]: {...config, harapanTertinggi: Number(e.target.value)}})} 
+                                  className="bg-black/50 border border-green-500/30 rounded px-3 py-2 w-24 text-center text-white focus:outline-none focus:border-green-400" 
+                                />
+                              </td>
+                              <td className="p-3 bg-green-900/10 text-center">
+                                <input 
+                                  type="number" 
+                                  value={config.harapanTerendah} 
+                                  onChange={(e) => setKonversi({...konversi, [sub]: {...config, harapanTerendah: Number(e.target.value)}})} 
+                                  className="bg-black/50 border border-green-500/30 rounded px-3 py-2 w-24 text-center text-white focus:outline-none focus:border-green-400" 
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
