@@ -424,7 +424,8 @@ export default function App() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = (suffix: any = '') => {
+    const finalSuffix = typeof suffix === 'string' ? suffix : '';
     const wb = XLSX.utils.book_new();
 
     // Sheet 1: Settings
@@ -458,7 +459,7 @@ export default function App() {
     const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentData]);
     XLSX.utils.book_append_sheet(wb, wsStudents, "Data Siswa dan Nilai");
 
-    XLSX.writeFile(wb, `Raport_Digital_${settings.namaSekolah || 'Data'}.xlsx`);
+    XLSX.writeFile(wb, `Raport_Digital_${settings.namaSekolah || 'Data'}${finalSuffix}.xlsx`);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -839,7 +840,8 @@ Syarat mutlak:
         alert('Gagal mengonversi beberapa mata pelajaran karena Nilai Asli Tertinggi dan Terendah sama (tidak boleh nol pembagian).');
       } else {
         setStudents(newStudents);
-        alert('Konversi nilai berhasil untuk semua mata pelajaran!');
+        handleExport(' Konversi');
+        setTimeout(() => alert('Konversi nilai berhasil untuk semua mata pelajaran! File hasil konversi otomatis di-download sebagai cadangan.'), 300);
       }
     }
   };
