@@ -306,6 +306,13 @@ export default function App() {
   const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
   const [selectedPrintId, setSelectedPrintId] = useState('1');
 
+  const [konversi, setKonversi] = useState({
+    asliTertinggi: 100,
+    asliTerendah: 30,
+    harapanTertinggi: 100,
+    harapanTerendah: 75
+  });
+
   // --- Exit Intent ---
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
@@ -681,10 +688,10 @@ export default function App() {
     const nilaiValues = Object.values(student.nilai).map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
     const avgNilai = nilaiValues.length ? (nilaiValues.reduce((a, b) => a + b, 0) / nilaiValues.length).toFixed(1) : 'Belum ada nilai';
 
-    const prompt = `Buatkan Catatan Wali Kelas yang SANGAT POSITIF, MEMOTIVASI, dan SINGKAT (1-2 kalimat saja) untuk siswa bernama ${student.nama}. 
+    const prompt = `Buatkan Catatan Wali Kelas yang SANGAT POSITIF, MEMOTIVASI, dan SINGKAT (1-2 kalimat saja) untuk siswa bernama ${student.nama} pada jenjang ${settings.jenjang} kelas ${settings.kelas}. 
 Informasi absensi: Sakit ${student.sakit || 0}, Izin ${student.izin || 0}, Alpha ${student.alpha || 0}. 
 Rata-rata nilainya: ${avgNilai}.
-PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan.`;
+PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan. Sesuaikan gaya bahasa dan saran dengan tingkat perkembangan usia pada jenjang ${settings.jenjang} kelas ${settings.kelas}.`;
 
     try {
       const response = await fetch('/api/generate', {
@@ -709,6 +716,39 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
       alert(`Gagal generate Catatan Wali Kelas: ${error.message}`);
     } finally {
       setIsGeneratingAI(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
+  const handleKonversi = () => {
+    if (window.confirm('Apakah Anda yakin ingin mengonversi semua nilai? Tindakan ini akan mengubah seluruh nilai yang sudah diisi berdasarkan rumus konversi.')) {
+      const { asliTertinggi, asliTerendah, harapanTertinggi, harapanTerendah } = konversi;
+      const NCmax = asliTertinggi;
+      const NCmin = asliTerendah;
+      const NHmax = harapanTertinggi;
+      const NHmin = harapanTerendah;
+
+      // Prevent division by zero
+      if (NCmax === NCmin) {
+        alert('Nilai Asli Tertinggi dan Terendah tidak boleh sama.');
+        return;
+      }
+
+      const newStudents = students.map(s => {
+        const newNilai = { ...s.nilai };
+        for (const sub in newNilai) {
+          const val = parseFloat(newNilai[sub]);
+          if (!isNaN(val)) {
+            let nk = NHmin + ((val - NCmin) / (NCmax - NCmin)) * (NHmax - NHmin);
+            nk = Math.round(nk);
+            // Optional: Clamp values if you want them strictly within NHmin to NHmax
+            // nk = Math.max(NHmin, Math.min(NHmax, nk));
+            newNilai[sub] = nk.toString();
+          }
+        }
+        return { ...s, nilai: newNilai };
+      });
+      setStudents(newStudents);
+      alert('Konversi nilai berhasil!');
     }
   };
 
@@ -1098,7 +1138,54 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                   <Info className="w-5 h-5" />
                   <p className="text-sm">Isi nilai untuk setiap mata pelajaran. Nama siswa otomatis diambil dari tab Data Siswa.</p>
                 </div>
-                <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
+                
+                <div className="flex flex-col xl:flex-row gap-4">
+                  {/* Form Konversi Nilai */}
+                  <div className="xl:w-[300px] flex-shrink-0 bg-black/20 p-4 rounded-lg border border-white/10 shadow-inner flex flex-col gap-4">
+                    <h3 className="font-bold text-cyan-400 border-b border-white/10 pb-2 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" /> Konversi Nilai
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div className="bg-red-950/40 p-3 rounded-lg border border-red-500/30">
+                        <h4 className="text-red-400 font-semibold mb-3 text-sm text-center">NILAI ASLI</h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-white/70">Tertinggi</label>
+                            <input type="number" value={konversi.asliTertinggi} onChange={(e) => setKonversi({...konversi, asliTertinggi: Number(e.target.value)})} className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-yellow-400" />
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-white/70">Terendah</label>
+                            <input type="number" value={konversi.asliTerendah} onChange={(e) => setKonversi({...konversi, asliTerendah: Number(e.target.value)})} className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-yellow-400" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-green-950/40 p-3 rounded-lg border border-green-500/30">
+                        <h4 className="text-green-400 font-semibold mb-3 text-sm text-center">NILAI HARAPAN</h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-white/70">Tertinggi</label>
+                            <input type="number" value={konversi.harapanTertinggi} onChange={(e) => setKonversi({...konversi, harapanTertinggi: Number(e.target.value)})} className="bg-white/10 border border-white/20 text-white rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-white" />
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-white/70">Terendah</label>
+                            <input type="number" value={konversi.harapanTerendah} onChange={(e) => setKonversi({...konversi, harapanTerendah: Number(e.target.value)})} className="bg-white/10 border border-white/20 text-white rounded px-2 py-1 text-right w-20 focus:outline-none focus:border-white" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleKonversi}
+                        className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 rounded-lg shadow-[0_0_10px_rgba(0,255,255,0.2)] transition-all flex justify-center items-center gap-2"
+                      >
+                        <Save className="w-4 h-4" /> Terapkan Konversi
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tabel Daftar Nilai */}
+                  <div className="flex-1 overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-cyan-300">
                       <tr>
@@ -1133,6 +1220,7 @@ PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             )}
