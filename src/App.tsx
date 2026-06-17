@@ -748,13 +748,38 @@ export default function App() {
     setIsGeneratingAI(prev => ({ ...prev, [index]: true }));
 
     // Hitung rata-rata nilai untuk konteks AI
-    const nilaiValues = Object.values(student.nilai).map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
+    const validScores = Object.entries(student.nilai)
+      .map(([sub, val]) => ({ sub, val: Number(val) }))
+      .filter(item => !isNaN(item.val) && item.val > 0)
+      .sort((a, b) => b.val - a.val);
+
+    const nilaiValues = validScores.map(s => s.val);
     const avgNilai = nilaiValues.length ? (nilaiValues.reduce((a, b) => a + b, 0) / nilaiValues.length).toFixed(1) : 'Belum ada nilai';
 
-    const prompt = `Buatkan Catatan Wali Kelas yang SANGAT POSITIF, MEMOTIVASI, dan SINGKAT (1-2 kalimat saja) untuk siswa bernama ${student.nama} pada jenjang ${settings.jenjang} kelas ${settings.kelas}. 
+    let topSubjects = "";
+    let lowSubjects = "";
+    if (validScores.length > 0) {
+      const highestVal = validScores[0].val;
+      const lowestVal = validScores[validScores.length - 1].val;
+      const highestSubs = validScores.filter(s => s.val === highestVal).map(s => s.sub).join(', ');
+      const lowestSubs = validScores.filter(s => s.val === lowestVal).map(s => s.sub).join(', ');
+
+      topSubjects = `Mata pelajaran dengan nilai tertinggi (${highestVal}): ${highestSubs}.`;
+      lowSubjects = `Mata pelajaran dengan nilai terendah (${lowestVal}): ${lowestSubs}.`;
+    }
+
+    const prompt = `Buatkan Catatan Wali Kelas untuk siswa bernama ${student.nama} pada jenjang ${settings.jenjang} kelas ${settings.kelas}. 
 Informasi absensi: Sakit ${student.sakit || 0}, Izin ${student.izin || 0}, Alpha ${student.alpha || 0}. 
 Rata-rata nilainya: ${avgNilai}.
-PENTING: JANGAN tulis hal negatif. Fokus pada apresiasi proses belajar, rajinnya, atau peningkatan sikapnya. Gunakan bahasa Indonesia baku dan sopan. Sesuaikan gaya bahasa dan saran dengan tingkat perkembangan usia pada jenjang ${settings.jenjang} kelas ${settings.kelas}.`;
+${topSubjects}
+${lowSubjects}
+
+TUGAS ANDA:
+Buatkan catatan wali kelas berdasarkan data di atas dengan menganalisis capaian nilai tertinggi dan terendah.
+Syarat mutlak:
+1. Gunakan bahasa Indonesia baku, sopan, dan memotivasi (sesuai tingkat perkembangan usia ${settings.jenjang} kelas ${settings.kelas}).
+2. Berikan apresiasi pada nilai tertinggi dan dorongan/motivasi positif untuk perbaikan pada nilai terendah. Jangan menggunakan kalimat negatif yang menjatuhkan mental.
+3. HARUS terdiri dari TEPAT 3 kalimat saja. Tidak boleh lebih, tidak boleh kurang.`;
 
     try {
       const response = await fetch('/api/generate', {
