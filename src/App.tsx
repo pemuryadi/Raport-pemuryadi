@@ -132,7 +132,7 @@ function getFase(jenjang: string, kelas: string) {
   return '';
 }
 
-function generateDeskripsi(mapel: string, skor: string | number, agamaSiswa: string = '') {
+function generateDeskripsi(mapel: string, skor: string | number, agamaSiswa: string = '', namaSiswa: string = '') {
   if (!mapel || skor === '') return '';
   const nilai = Number(skor);
   const m = mapel.toLowerCase();
@@ -191,37 +191,40 @@ function generateDeskripsi(mapel: string, skor: string | number, agamaSiswa: str
   }
 
   // Kurikulum Merdeka Standard Formatting strings
+  const prefix = namaSiswa ? `Ananda ${namaSiswa}` : "Ananda";
   if (nilai >= 90) {
-    return `Ananda menunjukkan penguasaan yang sangat baik dalam ${capaianTertinggi}.`;
+    return `${prefix} menunjukkan penguasaan yang sangat baik dalam ${capaianTertinggi}.`;
   } else if (nilai >= 80) {
-    return `Ananda menunjukkan penguasaan yang baik dalam ${capaianTertinggi}. Perlu bimbingan lebih pada bagian ${capaianTerendah}.`;
+    return `${prefix} menunjukkan penguasaan yang baik dalam ${capaianTertinggi}. Perlu bimbingan lebih pada bagian ${capaianTerendah}.`;
   } else if (nilai >= 70) {
-    return `Ananda menunjukkan penguasaan yang cukup dalam ${capaianTertinggi}. Masih cukup memerlukan pendampingan berkelanjutan dalam ${capaianTerendah}.`;
+    return `${prefix} menunjukkan penguasaan yang cukup dalam ${capaianTertinggi}. Masih cukup memerlukan pendampingan berkelanjutan dalam ${capaianTerendah}.`;
   } else {
-    return `Ananda memerlukan bimbingan intensif dan khusus agar mampu ${capaianTertinggi}, khususnya mendalami terkait ${capaianTerendah}.`;
+    return `${prefix} memerlukan bimbingan intensif dan khusus agar mampu ${capaianTertinggi}, khususnya mendalami terkait ${capaianTerendah}.`;
   }
 }
 
-function generateKokurikulerDescription(input: string): string {
+function generateKokurikulerDescription(input: string, namaSiswa: string = ''): string {
   const t = input.trim().toLowerCase();
   
   if (!t) return "";
 
   if (t.length > 50) return input.charAt(0).toUpperCase() + input.slice(1);
 
+  const prefix = namaSiswa ? `Ananda ${namaSiswa}` : "Ananda";
+
   const themes = [
-    { key: 'berkelanjutan', desc: 'Ananda sangat sadar dalam projek "Gaya Hidup Berkelanjutan", mampu menjaga lingkungan secara aktif serta mengaplikasikan hidup ramah lingkungan di kehidupan sehari-hari.' },
-    { key: 'kearifan', desc: 'Ananda berpartisipasi proaktif pada projek "Kearifan Lokal", menunjukkan sikap adaptif terhadap tradisi serta antusias menjaga kelestarian budaya daerah.' },
-    { key: 'bhinneka', desc: 'Ananda memiliki empati tinggi pada projek "Bhinneka Tunggal Ika", mengutamakan toleransi positif dan sangat menghargai keberagaman dalam pergaulan.' },
-    { key: 'bangun', desc: 'Ananda senantiasa energik dalam projek "Bangunlah Jiwa dan Raganya", mampu memelihara wawasan kesehatan fisik-mental serta berpartisipasi suportif dan positif.' },
-    { key: 'jiwa', desc: 'Ananda menunjukkan antusiasme yang luar biasa pada projek "Bangunlah Jiwa dan Raganya", menjaga kesehatan serta interaksi teman sebaya dengan baik.' },
-    { key: 'demokrasi', desc: 'Ananda mampu mengartikulasikan pemikiran logis pada projek "Suara Demokrasi", tanggap dalam musyawarah serta santun menghargai opini sesama rekan.' },
-    { key: 'rekayasa', desc: 'Ananda berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.' },
-    { key: 'teknologi', desc: 'Ananda berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.' },
-    { key: 'kewirausahaan', desc: 'Ananda berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.' },
-    { key: 'wirausaha', desc: 'Ananda berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.' },
-    { key: 'bekerja', desc: 'Ananda mengembangkan disiplin etos kerja gigih dalam projek "Kebekerjaan", senantiasa berpedoman kuat pada budaya produktif dan integritas profesional di setiap kesempatan.' },
-    { key: 'pancasila', desc: 'Ananda menginternalisasikan nilai-nilai Profil Pelajar Pancasila secara nyata, membiasakan adab kesantunan dan tanggung jawab moral di setiap aktivitas projek.' }
+    { key: 'berkelanjutan', desc: `${prefix} sangat sadar dalam projek "Gaya Hidup Berkelanjutan", mampu menjaga lingkungan secara aktif serta mengaplikasikan hidup ramah lingkungan di kehidupan sehari-hari.` },
+    { key: 'kearifan', desc: `${prefix} berpartisipasi proaktif pada projek "Kearifan Lokal", menunjukkan sikap adaptif terhadap tradisi serta antusias menjaga kelestarian budaya daerah.` },
+    { key: 'bhinneka', desc: `${prefix} memiliki empati tinggi pada projek "Bhinneka Tunggal Ika", mengutamakan toleransi positif dan sangat menghargai keberagaman dalam pergaulan.` },
+    { key: 'bangun', desc: `${prefix} senantiasa energik dalam projek "Bangunlah Jiwa dan Raganya", mampu memelihara wawasan kesehatan fisik-mental serta berpartisipasi suportif dan positif.` },
+    { key: 'jiwa', desc: `${prefix} menunjukkan antusiasme yang luar biasa pada projek "Bangunlah Jiwa dan Raganya", menjaga kesehatan serta interaksi teman sebaya dengan baik.` },
+    { key: 'demokrasi', desc: `${prefix} mampu mengartikulasikan pemikiran logis pada projek "Suara Demokrasi", tanggap dalam musyawarah serta santun menghargai opini sesama rekan.` },
+    { key: 'rekayasa', desc: `${prefix} berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.` },
+    { key: 'teknologi', desc: `${prefix} berdaya inovasi tinggi dalam projek "Rekayasa dan Teknologi", adaptif merancang ide solusi serta sangat jeli pada detail teknis saat praktik.` },
+    { key: 'kewirausahaan', desc: `${prefix} berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.` },
+    { key: 'wirausaha', desc: `${prefix} berpikiran maju pada projek "Kewirausahaan", sangat kreatif menciptakan gagasan rintisan serta unggul merencanakan strategi kelompok secara teliti.` },
+    { key: 'bekerja', desc: `${prefix} mengembangkan disiplin etos kerja gigih dalam projek "Kebekerjaan", senantiasa berpedoman kuat pada budaya produktif dan integritas profesional di setiap kesempatan.` },
+    { key: 'pancasila', desc: `${prefix} menginternalisasikan nilai-nilai Profil Pelajar Pancasila secara nyata, membiasakan adab kesantunan dan tanggung jawab moral di setiap aktivitas projek.` }
   ];
 
   for (const theme of themes) {
@@ -230,7 +233,7 @@ function generateKokurikulerDescription(input: string): string {
     }
   }
 
-  return `Ananda menunjukkan proses perkembangan yang sangat berkesan dan tanggap mengenai "${input}". Ananda sanggup membangun interaksi kolaboratif secara komunikatif.`;
+  return `${prefix} menunjukkan proses perkembangan yang sangat berkesan dan tanggap mengenai "${input}". ${prefix} sanggup membangun interaksi kolaboratif secara komunikatif.`;
 }
 
 // --- Reusable Components ---
@@ -305,6 +308,7 @@ export default function App() {
 
   const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
   const [selectedPrintId, setSelectedPrintId] = useState('1');
+  const [printSize, setPrintSize] = useState('A4');
 
   const [konversi, setKonversi] = useState<Record<string, {
     asliTertinggi: number,
@@ -1377,7 +1381,7 @@ Syarat mutlak:
             {activeTab === 'raport' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-black/20 p-4 rounded-lg border border-white/10">
-                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
                     <label className="text-cyan-300 font-medium whitespace-nowrap">Pilih Siswa (ID):</label>
                     <select 
                       value={selectedPrintId} 
@@ -1389,6 +1393,16 @@ Syarat mutlak:
                           ID {s.id} {s.nama ? `- ${s.nama}` : ''}
                         </option>
                       ))}
+                    </select>
+
+                    <label className="text-cyan-300 font-medium whitespace-nowrap sm:ml-4">Ukuran Kertas:</label>
+                    <select 
+                      value={printSize} 
+                      onChange={(e) => setPrintSize(e.target.value)}
+                      className="bg-black/40 border border-cyan-400/30 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 w-full sm:w-32"
+                    >
+                      <option value="A4" className="bg-[#1a1a2e]">A4</option>
+                      <option value="F4" className="bg-[#1a1a2e]">F4</option>
                     </select>
                   </div>
                   <button
@@ -1446,6 +1460,16 @@ Syarat mutlak:
 
       {/* --- Formal Report Card (Visible on Screen when Raport tab is active, and always on Print) --- */}
       <div className={`relative max-w-[21cm] mx-auto bg-white text-black p-8 sm:p-12 shadow-2xl print:shadow-none print:p-0 print:m-0 mb-12 ${activeTab === 'raport' ? 'block' : 'hidden print:block'}`}>
+        <style>
+          {`
+            @media print {
+              @page {
+                margin: 1.5cm;
+                size: ${printSize === 'F4' ? '21.5cm 33.0cm' : 'A4 portrait'};
+              }
+            }
+          `}
+        </style>
         
         {/* Logo Watermark Sekolah */}
         {settings.logoSekolah && (
@@ -1459,7 +1483,7 @@ Syarat mutlak:
         )}
 
         {/* Header */}
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 text-[13px] leading-relaxed">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 text-[13px] leading-relaxed print:break-inside-avoid">
           <div>
             <div className="flex"><span className="w-32 font-semibold">Nama Murid</span><span className="mr-2">:</span><span>{printStudent.nama || '.........................'}</span></div>
             <div className="flex"><span className="w-32 font-semibold">NISN / NIS</span><span className="mr-2">:</span><span>{printStudent.nisn || '..........'} / {printStudent.nis || '..........'}</span></div>
@@ -1489,11 +1513,11 @@ Syarat mutlak:
               const skor = printStudent.nilai[sub];
               if (!skor) return null;
               return (
-                <tr key={i}>
+                <tr key={i} className="print:break-inside-avoid">
                   <td className="border border-black p-2 text-center align-top">{i + 1}</td>
                   <td className="border border-black p-2 align-top">{sub}</td>
                   <td className="border border-black p-2 text-center align-top font-bold">{skor}</td>
-                  <td className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{generateDeskripsi(sub, skor, printStudent.agama)}</td>
+                  <td className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{generateDeskripsi(sub, skor, printStudent.agama, printStudent.nama)}</td>
                 </tr>
               );
             })}
@@ -1512,7 +1536,7 @@ Syarat mutlak:
         </table>
 
         {/* Table 2: Kokurikuler */}
-        <table className="w-full border-collapse border border-black mb-6 text-[13px]">
+        <table className="w-full border-collapse border border-black mb-6 text-[13px] print:break-inside-avoid">
           <thead>
             <tr className="bg-[#d9d9d9]">
               <th className="border border-black p-2 text-center font-bold">Kokurikuler</th>
@@ -1521,14 +1545,14 @@ Syarat mutlak:
           <tbody>
             <tr>
               <td className="border border-black p-2 leading-relaxed min-h-[40px] whitespace-pre-line">
-                {generateKokurikulerDescription(printStudent.kokurikuler)}
+                {generateKokurikulerDescription(printStudent.kokurikuler, printStudent.nama)}
               </td>
             </tr>
           </tbody>
         </table>
 
         {/* Table 3: Ekstrakurikuler */}
-        <table className="w-full border-collapse border border-black mb-6 text-[13px]">
+        <table className="w-full border-collapse border border-black mb-6 text-[13px] print:break-inside-avoid">
           <thead>
             <tr className="bg-[#d9d9d9]">
               <th className="border border-black p-2 w-10 text-center font-bold">No.</th>
@@ -1558,7 +1582,7 @@ Syarat mutlak:
         </table>
 
         {/* Table 4 & 5: Ketidakhadiran & Catatan Wali Kelas */}
-        <div className="grid grid-cols-[1fr_2fr] gap-6 mb-6 text-[13px]">
+        <div className="grid grid-cols-[1fr_2fr] gap-6 mb-6 text-[13px] print:break-inside-avoid">
           <table className="w-full border-collapse border border-black h-fit">
             <thead>
               <tr className="bg-[#d9d9d9]">
@@ -1598,7 +1622,7 @@ Syarat mutlak:
         </div>
 
         {/* Table 6: Tanggapan Orang Tua */}
-        <table className="w-full border-collapse border border-black mb-8 text-[13px]">
+        <table className="w-full border-collapse border border-black mb-8 text-[13px] print:break-inside-avoid">
           <thead>
             <tr className="bg-[#d9d9d9]">
               <th className="border border-black p-2 text-center font-bold">Tanggapan Orang Tua/Wali Murid</th>
@@ -1614,7 +1638,7 @@ Syarat mutlak:
 
         {/* Table 7: Keputusan (Kenaikan Kelas / Kelulusan) */}
         {settings.semester === 'Genap' && (
-          <table className="w-full border-collapse border border-black mb-6 text-[13px]">
+          <table className="w-full border-collapse border border-black mb-6 text-[13px] print:break-inside-avoid">
             <thead>
               <tr className="bg-[#d9d9d9]">
                 <th className="border border-black p-2 text-left font-bold uppercase">Keputusan:</th>
@@ -1638,7 +1662,7 @@ Syarat mutlak:
         )}
 
         {/* Signatures */}
-        <div className="flex justify-between text-[13px] mt-8 px-2">
+        <div className="flex justify-between text-[13px] mt-8 px-2 print:break-inside-avoid">
           <div className="text-center w-[28%]">
             <p className="mb-20">Orang Tua Murid</p>
             <p>(.................................)</p>
