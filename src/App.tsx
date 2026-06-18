@@ -1645,16 +1645,26 @@ Syarat mutlak:
           </div>
           <div className="text-center w-[35%]">
             <p className="mb-20">Kepala Sekolah</p>
-            <p>(.................................)</p>
-            {settings.namaKepsek && <p className="font-bold mt-1">{settings.namaKepsek}</p>}
-            {settings.nipKepsek && <p>NIP. {settings.nipKepsek}</p>}
+            {settings.namaKepsek ? (
+              <div className="inline-block">
+                <div className="font-bold border-b border-black pb-0.5 px-2">{settings.namaKepsek}</div>
+                {settings.nipKepsek && <div className="pt-0.5">NIP. {settings.nipKepsek}</div>}
+              </div>
+            ) : (
+              <p>(.................................)</p>
+            )}
           </div>
           <div className="text-center w-[35%]">
             <p>{settings.tempatTanggal || '........................., .........................'}</p>
             <p className="mb-16">Wali Kelas</p>
-            <p>(.................................)</p>
-            {settings.namaWali && <p className="font-bold mt-1">{settings.namaWali}</p>}
-            {settings.nipWali && <p>NIP. {settings.nipWali}</p>}
+            {settings.namaWali ? (
+              <div className="inline-block">
+                <div className="font-bold border-b border-black pb-0.5 px-2">{settings.namaWali}</div>
+                {settings.nipWali && <div className="pt-0.5">NIP. {settings.nipWali}</div>}
+              </div>
+            ) : (
+              <p>(.................................)</p>
+            )}
           </div>
         </div>
 
