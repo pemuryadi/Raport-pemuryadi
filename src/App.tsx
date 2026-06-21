@@ -1485,11 +1485,11 @@ Syarat mutlak:
         
         {/* Logo Watermark Sekolah */}
         {settings.logoSekolah && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+          <div className="absolute print:fixed inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
             <img 
               src={settings.logoSekolah} 
               alt="Watermark" 
-              className="w-[350px] h-[350px] object-contain opacity-[0.06] filter grayscale"
+              className="w-[600px] h-[600px] object-contain opacity-[0.06] filter grayscale"
             />
           </div>
         )}
