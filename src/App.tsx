@@ -1284,6 +1284,18 @@ Syarat mutlak:
                   <p className="text-sm">Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.</p>
                 </div>
 
+                <div className="bg-cyan-900/20 p-5 rounded-lg border border-cyan-500/30 text-sm text-cyan-100 shadow-inner">
+                  <h4 className="font-bold text-cyan-300 mb-3 flex items-center gap-2 text-base">
+                    <BookOpen className="w-5 h-5" /> Panduan Konversi Nilai
+                  </h4>
+                  <ul className="list-disc list-inside space-y-2 ml-1">
+                    <li><strong className="text-white">Nilai Asli Max & Min:</strong> Rentang nilai tertinggi dan terendah yang diperoleh siswa saat ini. Kolom ini otomatis terisi nilai minimal dan maksimal dari data yang telah diinput.</li>
+                    <li><strong className="text-white">Nilai Harapan Max & Min:</strong> Rentang nilai target yang diinginkan. Contoh: KKM/Target Minimal (misal: 75) sebagai Min dan Nilai Sempurna (misal: 100) sebagai Max.</li>
+                    <li><strong className="text-yellow-300">Penting:</strong> Rentang Nilai Asli (Max - Min) tidak boleh 0 (nol) agar rumus dapat beroperasi. Mesin otomatis menyesuaikan jika nilai semua siswa sama.</li>
+                    <li>Klik tombol <strong className="text-cyan-300">Terapkan Konversi Semua Mata Pelajaran</strong> untuk langsung menghitung dan mengganti data nilai di seluruh sistem. Berkas cadangan (<code className="bg-black/50 px-1 rounded">.xlsx</code>) akan otomatis terunduh sebelum data ditimpa.</li>
+                  </ul>
+                </div>
+
                 <div className="flex flex-col gap-6">
                   <div className="flex justify-between items-center bg-black/20 p-4 rounded-lg border border-white/10 shadow-inner">
                     <h3 className="font-bold text-cyan-400 flex items-center gap-2 text-lg">
