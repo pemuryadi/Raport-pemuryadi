@@ -34,9 +34,11 @@ export async function onRequestPost(context: any) {
       return new Response(JSON.stringify({ error: "Key dan Value diperlukan." }), { status: 400 });
     }
 
+    const newId = crypto.randomUUID();
+
     await env.DB.prepare(
-      "INSERT INTO site_content (id, content_key, content_value) VALUES (lower(hex(randomblob(4))), ?, ?) ON CONFLICT(content_key) DO UPDATE SET content_value = excluded.content_value, updated_at = CURRENT_TIMESTAMP"
-    ).bind(key, value).run();
+      "INSERT INTO site_content (id, content_key, content_value) VALUES (?, ?, ?) ON CONFLICT(content_key) DO UPDATE SET content_value = excluded.content_value, updated_at = CURRENT_TIMESTAMP"
+    ).bind(newId, key, value).run();
 
     return new Response(JSON.stringify({ success: true, message: "Konten berhasil diperbarui" }), {
       status: 200,
