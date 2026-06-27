@@ -273,7 +273,17 @@ export default function App() {
   const [hash, setHash] = useState(window.location.hash);
   const [cmsData, setCmsData] = useState({
     app_title: 'Raport Digital Builder',
-    app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.'
+    app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.',
+    logo_url: '/logo raport.png',
+    footer_text: '© 2026 Pemuryadi. All rights reserved.',
+    announcement_text: '',
+    modul_pdf_url: '/Modul Panduan Penggunaan Website raportsks.pdf',
+    guide_data_siswa: 'Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)',
+    guide_daftar_nilai: 'Isi nilai untuk setiap mata pelajaran. Nama siswa otomatis diambil dari tab Data Siswa.',
+    guide_konversi: 'Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.',
+    tahun_ajaran_options: TAHUN_AJARAN_OPTIONS,
+    semester_options: SEMESTER_OPTIONS,
+    smk_program_options: SMK_PROGRAM
   });
 
   useEffect(() => {
@@ -288,9 +298,23 @@ export default function App() {
         const res = await fetch('/api/content');
         if (res.ok) {
           const data = await res.json();
+          const parseArray = (str: string, fallback: string[]) => {
+             if (!str) return fallback;
+             try { const arr = JSON.parse(str); return Array.isArray(arr) ? arr : fallback; } catch (e) { return fallback; }
+          };
           setCmsData(prev => ({
             app_title: data.app_title || prev.app_title,
-            app_subtitle: data.app_subtitle || prev.app_subtitle
+            app_subtitle: data.app_subtitle || prev.app_subtitle,
+            logo_url: data.logo_url || prev.logo_url,
+            footer_text: data.footer_text || prev.footer_text,
+            announcement_text: data.announcement_text || prev.announcement_text,
+            modul_pdf_url: data.modul_pdf_url || prev.modul_pdf_url,
+            guide_data_siswa: data.guide_data_siswa || prev.guide_data_siswa,
+            guide_daftar_nilai: data.guide_daftar_nilai || prev.guide_daftar_nilai,
+            guide_konversi: data.guide_konversi || prev.guide_konversi,
+            tahun_ajaran_options: parseArray(data.tahun_ajaran_options, prev.tahun_ajaran_options),
+            semester_options: parseArray(data.semester_options, prev.semester_options),
+            smk_program_options: parseArray(data.smk_program_options, prev.smk_program_options),
           }));
         }
       } catch (e) {
@@ -947,13 +971,13 @@ Syarat mutlak:
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-cyan-400">
-                <img src="/logo raport.png" alt="Logo Raport" className="h-8 object-contain drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
+                <img src={cmsData.logo_url} alt="Logo Raport" className="h-8 object-contain drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
                 {cmsData.app_title.toUpperCase()}
               </h1>
               
               <div className="flex flex-wrap items-center gap-2">
                 <a
-                  href="/Modul%20Panduan%20Penggunaan%20Website%20raportsks.pdf"
+                  href={cmsData.modul_pdf_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white transition-all shadow-[0_0_15px_rgba(192,38,211,0.4)] border border-fuchsia-400/50 animate-pulse"
@@ -1051,13 +1075,13 @@ Syarat mutlak:
                     <FormSelect label="Jenjang" value={settings.jenjang} onChange={handleJenjangChange} options={JENJANG_OPTIONS} />
                     <FormSelect label="Kelas" value={settings.kelas} onChange={handleKelasChange} options={KELAS_OPTIONS[settings.jenjang]} />
                     {['SMK', 'MAK'].includes(settings.jenjang) && (
-                      <FormSelect label="Program Keahlian" value={settings.kejuruan} onChange={handleKejuruanChange} options={SMK_PROGRAM} />
+                      <FormSelect label="Program Keahlian" value={settings.kejuruan} onChange={handleKejuruanChange} options={cmsData.smk_program_options} />
                     )}
                     <FormInput label="Fase (Otomatis)" value={fase} readOnly />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <FormSelect label="Semester" value={settings.semester} onChange={(e: any) => setSettings({...settings, semester: e.target.value})} options={SEMESTER_OPTIONS} />
-                    <FormSelect label="Tahun Ajaran" value={settings.tahunAjaran} onChange={(e: any) => setSettings({...settings, tahunAjaran: e.target.value})} options={TAHUN_AJARAN_OPTIONS} />
+                    <FormSelect label="Semester" value={settings.semester} onChange={(e: any) => setSettings({...settings, semester: e.target.value})} options={cmsData.semester_options} />
+                    <FormSelect label="Tahun Ajaran" value={settings.tahunAjaran} onChange={(e: any) => setSettings({...settings, tahunAjaran: e.target.value})} options={cmsData.tahun_ajaran_options} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormInput label="Nama Sekolah" value={settings.namaSekolah} onChange={(e: any) => setSettings({...settings, namaSekolah: e.target.value})} />
@@ -1176,7 +1200,7 @@ Syarat mutlak:
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-cyan-300 mb-4">
                   <Info className="w-5 h-5" />
-                  <p className="text-sm">Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)</p>
+                  <p className="text-sm">{cmsData.guide_data_siswa}</p>
                 </div>
                 <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
@@ -1274,7 +1298,7 @@ Syarat mutlak:
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-cyan-300 mb-4">
                   <Info className="w-5 h-5" />
-                  <p className="text-sm">Isi nilai untuk setiap mata pelajaran. Nama siswa otomatis diambil dari tab Data Siswa.</p>
+                  <p className="text-sm">{cmsData.guide_daftar_nilai}</p>
                 </div>
                 <div className="overflow-auto max-h-[65vh] bg-black/20 rounded-lg border border-white/10 relative shadow-inner">
                   <table className="w-full text-sm text-left whitespace-nowrap">
@@ -1320,7 +1344,7 @@ Syarat mutlak:
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-cyan-300 mb-4">
                   <Info className="w-5 h-5" />
-                  <p className="text-sm">Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.</p>
+                  <p className="text-sm">{cmsData.guide_konversi}</p>
                 </div>
 
                 <div className="bg-cyan-900/20 p-5 rounded-lg border border-cyan-500/30 text-sm text-cyan-100 shadow-inner">
@@ -1507,6 +1531,14 @@ Syarat mutlak:
 
           </div>
         </div>
+        
+        {/* Footer */}
+        {cmsData.footer_text && (
+          <div className="text-center py-6 text-sm text-cyan-400/50 print:hidden">
+            {cmsData.footer_text}
+          </div>
+        )}
+
       </div>
 
       {/* --- Formal Report Card (Visible on Screen when Raport tab is active, and always on Print) --- */}
