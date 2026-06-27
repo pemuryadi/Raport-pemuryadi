@@ -47,13 +47,16 @@ CREATE TABLE site_content (
 1. Buka dashboard Cloudflare Anda.
 2. Buka menu **Workers & Pages** -> **D1 SQL Database**.
 3. Buat database baru dengan nama `raport-cms-db`.
-4. Salin `database_id` yang diberikan.
-5. Buka file `wrangler.toml` di repository ini, lalu ganti `database_id = "default-id-ganti-nanti"` dengan ID yang Anda salin.
-6. Jalankan migrasi tabel dengan mengetikkan perintah ini di terminal (menggunakan Wrangler CLI):
+4. Salin `database_id` yang diberikan (meskipun nanti kita akan menautkannya langsung lewat Dashboard).
+5. Buka tab **Settings** -> **Functions** di halaman project Cloudflare Pages Anda.
+6. Scroll ke bagian **D1 database bindings**, tambahkan binding baru dengan:
+   - **Variable name:** `DB`
+   - **D1 database:** Pilih database `raport-cms-db` yang baru saja Anda buat.
+7. Untuk menjalankan migrasi tabel (`schema.sql`), Anda bisa mengeksekusi perintah ini di terminal lokal Anda (pastikan Anda sudah login ke wrangler):
    ```bash
    npx wrangler d1 execute raport-cms-db --file=./schema.sql --remote
    ```
-7. Pastikan Anda telah menautkan (bind) D1 ke project Pages Anda melalui menu pengaturan **Functions** -> **D1 database bindings** di Cloudflare Pages. (Isi Variable name: `DB`).
+   *Atau*, Anda bisa masuk ke halaman D1 Database di dashboard Cloudflare, buka tab **Console**, dan salin-tempel (copy-paste) isi dari file `schema.sql` lalu jalankan secara manual.
 
 ## 4. Cara Memerintahkan AI untuk Menambah Komponen yang Bisa Diedit
 
