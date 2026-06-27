@@ -957,7 +957,7 @@ Syarat mutlak:
     if (token) {
       return <AdminDashboard />;
     }
-    return <AdminLogin onLoginSuccess={() => setHash('#/admin')} />;
+    return <AdminLogin onLoginSuccess={() => window.location.reload()} />;
   }
 
   return (
