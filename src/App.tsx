@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram, Sparkles, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
+import { AdminLogin } from './components/AdminLogin';
+import { AdminDashboard } from './components/AdminDashboard';
 // --- Types ---
 interface Student {
   id: string;
@@ -268,6 +270,35 @@ const FormSelect = ({ label, value, onChange, options, className = '' }: any) =>
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
+  const [hash, setHash] = useState(window.location.hash);
+  const [cmsData, setCmsData] = useState({
+    app_title: 'Raport Digital Builder',
+    app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.'
+  });
+
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    const fetchCms = async () => {
+      try {
+        const res = await fetch('/api/content');
+        if (res.ok) {
+          const data = await res.json();
+          setCmsData(prev => ({
+            app_title: data.app_title || prev.app_title,
+            app_subtitle: data.app_subtitle || prev.app_subtitle
+          }));
+        }
+      } catch (e) {
+        console.log("Failed to fetch CMS", e);
+      }
+    };
+    fetchCms();
+  }, []);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -897,6 +928,14 @@ Syarat mutlak:
     }).sort((a, b) => b.total - a.total).map((s, index) => ({ ...s, rank: index + 1 }));
   }, [activeStudents, subjects]);
 
+  if (hash === '#/admin') {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      return <AdminDashboard />;
+    }
+    return <AdminLogin onLoginSuccess={() => setHash('#/admin')} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
       
@@ -909,7 +948,7 @@ Syarat mutlak:
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-cyan-400">
                 <img src="/logo raport.png" alt="Logo Raport" className="h-8 object-contain drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
-                RAPORT DIGITAL BUILDER
+                {cmsData.app_title.toUpperCase()}
               </h1>
               
               <div className="flex flex-wrap items-center gap-2">
@@ -1143,8 +1182,8 @@ Syarat mutlak:
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-cyan-300">
                       <tr>
-                        <th className="p-3 font-semibold sticky left-0 top-0 bg-[#1a1a2e] z-30 w-12 border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
-                        <th className="p-3 font-semibold sticky left-[48px] top-0 bg-[#1a1a2e] z-30 min-w-[200px] border-r border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
+                        <th className="p-3 font-semibold sticky md:left-0 top-0 bg-[#1a1a2e] z-20 md:z-30 w-12 border-b border-white/10 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
+                        <th className="p-3 font-semibold sticky md:left-[48px] top-0 bg-[#1a1a2e] z-20 md:z-30 min-w-[200px] border-r border-b border-white/10 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NISN</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">NIS</th>
                         <th className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] border-b border-white/10">Agama</th>
@@ -1164,8 +1203,8 @@ Syarat mutlak:
                     <tbody>
                       {students.map((s, i) => (
                         <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-2 sticky left-0 bg-[#1a1a2e] z-10 text-center text-cyan-400">{s.id}</td>
-                          <td className="p-2 sticky left-[48px] bg-[#1a1a2e] z-10 border-r border-white/10">
+                          <td className="p-2 relative md:sticky md:left-0 bg-transparent md:bg-[#1a1a2e] md:z-10 text-center text-cyan-400">{s.id}</td>
+                          <td className="p-2 relative md:sticky md:left-[48px] bg-transparent md:bg-[#1a1a2e] md:z-10 border-r border-white/10">
                             <input value={s.nama} onChange={e => updateStudent(i, 'nama', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" placeholder="Nama..." />
                           </td>
                           <td className="p-2"><input value={s.nisn} onChange={e => updateStudent(i, 'nisn', e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1.5 w-full text-white focus:border-cyan-400 focus:outline-none" /></td>
@@ -1241,8 +1280,8 @@ Syarat mutlak:
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-cyan-300">
                       <tr>
-                        <th className="p-3 font-semibold sticky left-0 top-0 bg-[#1a1a2e] z-30 w-12 border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
-                        <th className="p-3 font-semibold sticky left-[48px] top-0 bg-[#1a1a2e] z-30 min-w-[200px] border-r border-b border-white/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
+                        <th className="p-3 font-semibold sticky md:left-0 top-0 bg-[#1a1a2e] z-20 md:z-30 w-12 border-b border-white/10 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ID</th>
+                        <th className="p-3 font-semibold sticky md:left-[48px] top-0 bg-[#1a1a2e] z-20 md:z-30 min-w-[200px] border-r border-b border-white/10 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Nama Siswa</th>
                         {subjects.map((sub, idx) => (
                           <th key={idx} className="p-3 font-semibold sticky top-0 bg-[#1a1a2e] z-20 min-w-[120px] text-center border-b border-white/10" title={sub}>
                             <div className="truncate w-32 mx-auto">{sub}</div>
@@ -1253,8 +1292,8 @@ Syarat mutlak:
                     <tbody>
                       {students.map((s, i) => (
                         <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-2 sticky left-0 bg-[#1a1a2e] z-10 text-center text-cyan-400">{s.id}</td>
-                          <td className="p-2 sticky left-[48px] bg-[#1a1a2e] z-10 border-r border-white/10">
+                          <td className="p-2 relative md:sticky md:left-0 bg-transparent md:bg-[#1a1a2e] md:z-10 text-center text-cyan-400">{s.id}</td>
+                          <td className="p-2 relative md:sticky md:left-[48px] bg-transparent md:bg-[#1a1a2e] md:z-10 border-r border-white/10">
                             <div className="px-2 py-1.5 text-white/80 truncate w-full">{s.nama || <span className="text-white/30 italic">Belum diisi...</span>}</div>
                           </td>
                           {subjects.map((sub, idx) => (
