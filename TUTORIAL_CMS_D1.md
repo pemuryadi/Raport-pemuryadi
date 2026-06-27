@@ -15,8 +15,18 @@ Untuk mengaksesnya, ikuti langkah berikut:
    - **Password:** `raportskspemuryadi60`
 4. Klik **Masuk**. Jika berhasil, Anda akan diarahkan ke CMS Dashboard.
 
-> [!TIP]
-> Kredensial login saat ini disimpan dengan aman di file `.env` di Cloudflare Pages. Jika Anda ingin mengubah password, Anda bisa mengubah variabel `VITE_ADMIN_PASSWORD` melalui dashboard pengaturan Cloudflare Pages.
+> [!IMPORTANT]
+> **PENTING UNTUK DEPLOYMENT CLOUDFLARE:** 
+> File `.env` yang ada di repository ini hanya berfungsi untuk pengembangan lokal (di komputer). Saat website Anda di-deploy ke Cloudflare Pages, Anda **wajib** memasukkan kredensial admin tersebut secara manual di Dashboard Cloudflare.
+> 
+> **Cara Menambahkan Environment Variable di Cloudflare Pages:**
+> 1. Buka dashboard Cloudflare Anda.
+> 2. Buka tab **Settings** -> **Environment variables** di halaman project Cloudflare Pages Anda.
+> 3. Tambahkan dua variabel (Production & Preview):
+>    - Variable name: `VITE_ADMIN_EMAIL` | Value: `p.e.muryadi@gmail.com`
+>    - Variable name: `VITE_ADMIN_PASSWORD` | Value: `raportskspemuryadi60`
+> 4. Jika Anda pernah mengubah API Key Gemini, Anda juga bisa menambahkan `VITE_GEMINI_API_KEY` di sana.
+> 5. **Simpan** dan **Lakukan Deployment Ulang (Re-deploy)** agar variabel ini terbaca oleh sistem.
 
 ## 2. Mengubah Teks secara Real-time
 
