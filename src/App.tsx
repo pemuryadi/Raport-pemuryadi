@@ -275,7 +275,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
   const [hash, setHash] = useState(window.location.hash);
   const [user, setUser] = useState<any>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [cmsData, setCmsData] = useState({
     app_title: 'Raport Digital Builder',
     app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.',
@@ -492,10 +491,6 @@ export default function App() {
   };
 
   const handleExport = (suffix: any = '') => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
     const finalSuffix = typeof suffix === 'string' ? suffix : '';
     const wb = XLSX.utils.book_new();
 
@@ -534,12 +529,6 @@ export default function App() {
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user) {
-      e.preventDefault();
-      setShowLoginModal(true);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -986,33 +975,16 @@ Syarat mutlak:
     return <TermsOfUse onBack={() => window.history.back()} />;
   }
 
+  if (!user) {
+    return <Login onLoginSuccess={(u) => {
+      setUser(u);
+      localStorage.setItem('app_user', JSON.stringify(u));
+    }} cmsData={cmsData} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
       
-      {/* Login Modal Overlay */}
-      <AnimatePresence>
-        {showLoginModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="relative w-full max-w-md">
-              <button 
-                onClick={() => setShowLoginModal(false)}
-                className="absolute top-4 right-4 z-10 text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
-              <Login 
-                onLoginSuccess={(u) => {
-                  setUser(u);
-                  localStorage.setItem('app_user', JSON.stringify(u));
-                  setShowLoginModal(false);
-                }} 
-                cmsData={cmsData} 
-              />
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* --- Cyberpunk Control Panel (Hidden on Print) --- */}
       <div className="p-4 sm:p-6 print:hidden">
         <div className="max-w-7xl mx-auto">
@@ -1061,24 +1033,15 @@ Syarat mutlak:
                 <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white transition-all border border-red-500/30">
                   <Trash2 className="w-4 h-4" /> Reset Data
                 </button>
-                {user ? (
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem('app_user');
-                      setUser(null);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-600/80 hover:bg-red-500 text-white transition-all shadow-lg ml-2"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-green-600/80 hover:bg-green-500 text-white transition-all shadow-lg ml-2"
-                  >
-                    Login
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('app_user');
+                    setUser(null);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-600/80 hover:bg-red-500 text-white transition-all shadow-lg ml-2"
+                >
+                  Logout
+                </button>
               </div>
             </div>
 
