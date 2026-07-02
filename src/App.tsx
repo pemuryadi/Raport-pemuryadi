@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
-import { Login } from './components/Login';
+
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfUse } from './components/TermsOfUse';
 // --- Types ---
@@ -975,12 +975,7 @@ Syarat mutlak:
     return <TermsOfUse onBack={() => window.history.back()} />;
   }
 
-  if (!user) {
-    return <Login onLoginSuccess={(u) => {
-      setUser(u);
-      localStorage.setItem('app_user', JSON.stringify(u));
-    }} cmsData={cmsData} />;
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
