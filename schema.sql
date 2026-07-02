@@ -11,7 +11,7 @@ INSERT INTO site_content (id, content_key, content_value) VALUES
 ('1', 'app_title', 'Raport Digital Builder'),
 ('2', 'app_subtitle', 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.'),
 ('3', 'logo_url', '/logo raport.png'),
-('4', 'footer_text', '© 2026 Pemuryadi. All rights reserved.'),
+('4', 'footer_text', '© 2026 pemuryadi. all rights reserved.'),
 ('5', 'announcement_text', ''),
 ('6', 'modul_pdf_url', '/Modul Panduan Penggunaan Website raportsks.pdf'),
 ('7', 'guide_data_siswa', 'Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)'),
@@ -20,3 +20,10 @@ INSERT INTO site_content (id, content_key, content_value) VALUES
 ('10', 'tahun_ajaran_options', '["2023/2024", "2024/2025", "2025/2026"]'),
 ('11', 'semester_options', '["Ganjil", "Genap"]'),
 ('12', 'smk_program_options', '["Bisnis dan Manajemen", "Pariwisata", "Seni dan Ekonomi Kreatif", "Teknologi Informasi", "Kesehatan dan Pekerjaan Sosial", "Agribisnis dan Agroteknologi", "Kemaritiman", "Teknologi Konstruksi dan Properti", "Teknologi Manufaktur dan Rekayasa", "Energi dan Pertambangan"]');
+
+CREATE TABLE IF NOT EXISTS visitors (
+  email TEXT PRIMARY KEY,
+  name TEXT,
+  last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  login_count INTEGER DEFAULT 1
+);

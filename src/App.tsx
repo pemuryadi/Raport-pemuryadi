@@ -4,6 +4,9 @@ import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
+import { Login } from './components/Login';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfUse } from './components/TermsOfUse';
 // --- Types ---
 interface Student {
   id: string;
@@ -271,11 +274,12 @@ const FormSelect = ({ label, value, onChange, options, className = '' }: any) =>
 export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
   const [hash, setHash] = useState(window.location.hash);
+  const [user, setUser] = useState<any>(null);
   const [cmsData, setCmsData] = useState({
     app_title: 'Raport Digital Builder',
     app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.',
     logo_url: '/logo raport.png',
-    footer_text: '© 2026 Pemuryadi. All rights reserved.',
+    footer_text: '© 2026 pemuryadi. all rights reserved.',
     announcement_text: '',
     modul_pdf_url: '/Modul Panduan Penggunaan Website raportsks.pdf',
     guide_data_siswa: 'Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)',
@@ -426,6 +430,9 @@ export default function App() {
       setStudents(p);
     }
     if (savedSubjects) setSubjects(JSON.parse(savedSubjects));
+
+    const savedUser = localStorage.getItem('app_user');
+    if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
 
   const handleSave = () => {
@@ -960,6 +967,21 @@ Syarat mutlak:
     return <AdminLogin onLoginSuccess={() => window.location.reload()} />;
   }
 
+  if (hash === '#/privacy') {
+    return <PrivacyPolicy onBack={() => window.history.back()} />;
+  }
+
+  if (hash === '#/terms') {
+    return <TermsOfUse onBack={() => window.history.back()} />;
+  }
+
+  if (!user) {
+    return <Login onLoginSuccess={(u) => {
+      setUser(u);
+      localStorage.setItem('app_user', JSON.stringify(u));
+    }} cmsData={cmsData} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans print:bg-none print:bg-white print:text-black">
       
@@ -1009,7 +1031,16 @@ Syarat mutlak:
                 </label>
 
                 <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white transition-all border border-red-500/30">
-                  <Trash2 className="w-4 h-4" /> Reset
+                  <Trash2 className="w-4 h-4" /> Reset Data
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('app_user');
+                    setUser(null);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-600/80 hover:bg-red-500 text-white transition-all shadow-lg ml-2"
+                >
+                  Logout
                 </button>
               </div>
             </div>

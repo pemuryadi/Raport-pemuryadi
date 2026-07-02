@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, LogOut, ArrowLeft, Image as ImageIcon, FileText, Database, Layout } from 'lucide-react';
+import { Save, Loader2, LogOut, ArrowLeft, Image as ImageIcon, FileText, Database, Layout, Users } from 'lucide-react';
 
 interface CmsData {
   app_title: string;
@@ -21,7 +21,7 @@ export function AdminDashboard() {
     app_title: 'Raport Digital Builder',
     app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.',
     logo_url: '/logo raport.png',
-    footer_text: '© 2026 Pemuryadi. All rights reserved.',
+    footer_text: '© 2026 pemuryadi. all rights reserved.',
     announcement_text: '',
     modul_pdf_url: '/Modul Panduan Penggunaan Website raportsks.pdf',
     guide_data_siswa: 'Isi data siswa di bawah ini. ID akan otomatis terhubung ke tab Nilai dan Raport. (Maksimal 35 Siswa)',
@@ -35,7 +35,8 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'branding' | 'panduan' | 'master'>('branding');
+  const [activeTab, setActiveTab] = useState<'branding' | 'panduan' | 'master' | 'visitors'>('branding');
+  const [visitors, setVisitors] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +73,16 @@ export function AdminDashboard() {
         }
       } catch (error) {
         console.error("Gagal mengambil data CMS", error);
+      }
+      
+      try {
+        const visRes = await fetch('/api/visitors');
+        if (visRes.ok) {
+          const visData = await visRes.json();
+          setVisitors(visData);
+        }
+      } catch (e) {
+        console.error("Gagal mengambil data visitor", e);
       } finally {
         setLoading(false);
       }
@@ -215,6 +226,13 @@ export function AdminDashboard() {
               <Database className="w-5 h-5" />
               <span className="font-medium">Master Data</span>
             </button>
+            <button 
+              onClick={() => setActiveTab('visitors')}
+              className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${activeTab === 'visitors' ? 'bg-gradient-to-r from-cyan-900/50 to-transparent border border-cyan-500/30 text-cyan-300 shadow-[inset_2px_0_0_0_#22d3ee]' : 'hover:bg-white/5 text-gray-400 hover:text-gray-200'}`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="font-medium">Analisis Pengunjung</span>
+            </button>
           </div>
 
           {/* Editor Area */}
@@ -270,6 +288,53 @@ export function AdminDashboard() {
                   <InputRow label="Opsi Tahun Ajaran" objKey="tahun_ajaran_options" isArray isTextArea />
                   <InputRow label="Opsi Semester" objKey="semester_options" isArray />
                   <InputRow label="Opsi Program Keahlian SMK" objKey="smk_program_options" isArray isTextArea />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'visitors' && (
+              <div className="space-y-8 animate-in fade-in">
+                <div className="border-b border-white/5 pb-4">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-cyan-400" /> Analisis Pengunjung
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">Daftar pengunjung yang telah login ke sistem dengan akun Google.</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                   <div className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
+                      <span className="text-3xl font-bold text-cyan-400">{visitors.length}</span>
+                      <span className="text-sm text-gray-400">Total Pengunjung</span>
+                   </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-300">
+                    <thead className="bg-white/5 border-b border-white/10 text-cyan-300">
+                      <tr>
+                        <th className="p-4 font-semibold">Nama</th>
+                        <th className="p-4 font-semibold">Email</th>
+                        <th className="p-4 font-semibold">Total Login</th>
+                        <th className="p-4 font-semibold">Login Terakhir</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visitors.length > 0 ? (
+                        visitors.map((v, i) => (
+                          <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td className="p-4">{v.name}</td>
+                            <td className="p-4">{v.email}</td>
+                            <td className="p-4">{v.login_count}</td>
+                            <td className="p-4">{new Date(v.last_login).toLocaleString('id-ID')}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-gray-500">Belum ada data pengunjung.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
