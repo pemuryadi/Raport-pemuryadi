@@ -1,0 +1,31 @@
+# AI Scrapers and Security Crawlers Scan & Blocklist Status
+# This file tracks known AI crawlers and security scanning bots blocked by the site's security policy.
+
+[Security Directives]
+Status: Full Disallow Active (via robots.txt)
+Coverage: All User-Agents, paths, and methods.
+
+[Monitored AI Scrapers & Crawlers]
+- GPTBot (OpenAI)
+- ChatGPT-User (OpenAI Web Browser/Plugins)
+- OAI-SearchBot (OpenAI Search)
+- ClaudeBot (Anthropic)
+- Claude-User (Anthropic Web Client)
+- Google-Extended (Google Bard/Gemini Training)
+- CCBot (Common Crawl)
+- Meta-ExternalAgent (Meta AI)
+- PerplexityBot (Perplexity Search)
+- Amazonbot (Amazon Crawler)
+- CohereBot (Cohere AI)
+- Scrapy (Generic Web Scraper Framework)
+- PetalBot (Huawei AI Search)
+- ByteSpider (ByteDance/TikTok AI)
+- YouBot (You.com Search)
+
+[Security & Vulnerability Scanners Blocked]
+- ScanAI
+- Nessus
+- Acunetix
+- Nmap
+- ZAP (OWASP)
+- Nikto
