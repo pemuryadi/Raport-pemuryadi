@@ -7,6 +7,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfUse } from './components/TermsOfUse';
+import { daftarWilayah } from './data/wilayah';
 // --- Types ---
 interface Student {
   id: string;
@@ -275,6 +276,28 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
   const [hash, setHash] = useState(window.location.hash);
   const [user, setUser] = useState<any>(null);
+  const [currentRegion, setCurrentRegion] = useState<any>(null);
+
+  useEffect(() => {
+    const checkPath = () => {
+      const path = window.location.pathname;
+      const match = path.match(/^\/wilayah\/([^/]+)/);
+      if (match) {
+        const slug = match[1];
+        const found = daftarWilayah.find(w => w.slug === slug);
+        if (found) {
+          setCurrentRegion(found);
+        } else {
+          setCurrentRegion(null);
+        }
+      } else {
+        setCurrentRegion(null);
+      }
+    };
+    checkPath();
+    window.addEventListener('popstate', checkPath);
+    return () => window.removeEventListener('popstate', checkPath);
+  }, []);
   const [cmsData, setCmsData] = useState({
     app_title: 'Raport Digital Builder',
     app_subtitle: 'Sistem pembuatan raport digital modern, cepat, dan mudah untuk semua jenjang pendidikan di Indonesia.',
@@ -1070,6 +1093,58 @@ Syarat mutlak:
             {/* TAB: BERANDA */}
             {activeTab === 'beranda' && (
               <div className="space-y-8">
+                {currentRegion && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative overflow-hidden mb-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-blue-950/40 to-purple-950/40 border border-cyan-500/30 p-6 md:p-8 backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.15)]"
+                  >
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                      <div className="text-left">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 mb-3 uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Layanan Wilayah Khusus
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-blue-100 to-purple-200 leading-tight">
+                          Aplikasi Raport Kurikulum Merdeka {currentRegion.name}
+                        </h2>
+                        <p className="text-cyan-100/70 text-sm md:text-base mt-2 max-w-3xl leading-relaxed">
+                          Selamat datang para pendidik di {currentRegion.type === 'provinsi' ? '' : 'wilayah '}<strong>{currentRegion.name}{currentRegion.type !== 'provinsi' && `, Provinsi ${currentRegion.province}`}</strong>. 
+                          Sistem kami dioptimalkan khusus untuk membantu sekolah-sekolah di daerah Anda dalam melakukan rekap data nilai dan cetak raport Kurikulum Merdeka secara otomatis, aman, dan 100% gratis.
+                        </p>
+                      </div>
+                      
+                      <div className="flex-shrink-0">
+                        <button 
+                          onClick={() => {
+                            const el = document.getElementById('global-settings-panel');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] transform hover:-translate-y-0.5"
+                        >
+                          Mulai Mengisi Raport
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-cyan-950/50 flex flex-wrap items-center gap-2 text-xs text-cyan-400/60">
+                      <a href="/" className="hover:text-cyan-300 transition-colors">Beranda</a>
+                      <span>/</span>
+                      {currentRegion.type !== 'provinsi' && (
+                        <>
+                          <a href={`/wilayah/provinsi-${currentRegion.province.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`} className="hover:text-cyan-300 transition-colors">
+                            {currentRegion.province}
+                          </a>
+                          <span>/</span>
+                        </>
+                      )}
+                      <span className="text-cyan-200">{currentRegion.name}</span>
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="bg-black/30 border border-cyan-400/20 p-6 rounded-xl text-center">
                     <div className="text-cyan-400 mb-2"><CheckCircle className="w-8 h-8 mx-auto" /></div>
@@ -1093,7 +1168,7 @@ Syarat mutlak:
                   </div>
                 </div>
 
-                <div className="bg-black/20 p-6 rounded-xl border border-white/10">
+                <div id="global-settings-panel" className="bg-black/20 p-6 rounded-xl border border-white/10">
                   <h2 className="text-xl font-semibold text-cyan-300 mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5" /> Pengaturan Global Raport
                   </h2>
@@ -1559,6 +1634,62 @@ Syarat mutlak:
         </div>
         
         {/* Footer */}
+        <div className="mt-8 border-t border-white/10 pt-8 text-left max-w-7xl mx-auto px-4 print:hidden">
+          {!currentRegion ? (
+            <>
+              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
+                Direktori Raport Kurikulum Merdeka per Provinsi se-Indonesia:
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
+                {daftarWilayah.filter(w => w.type === 'provinsi').map(prov => (
+                  <a key={prov.slug} href={`/wilayah/${prov.slug}`} className="hover:text-cyan-300 transition-colors">
+                    {prov.name}
+                  </a>
+                ))}
+              </div>
+            </>
+          ) : currentRegion.type === 'provinsi' ? (
+            <>
+              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
+                Aplikasi Raport Kurikulum Merdeka Kabupaten & Kota di {currentRegion.name}:
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
+                {daftarWilayah.filter(w => w.province === currentRegion.name && w.type !== 'provinsi').map(city => (
+                  <a key={city.slug} href={`/wilayah/${city.slug}`} className="hover:text-cyan-300 transition-colors">
+                    {city.name}
+                  </a>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 text-center mb-6">
+                <a href="/" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
+                  ← Kembali ke Beranda Utama
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
+                Aplikasi Raport Kurikulum Merdeka Lainnya di Provinsi {currentRegion.province}:
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
+                {daftarWilayah.filter(w => w.province === currentRegion.province && w.slug !== currentRegion.slug).map(city => (
+                  <a key={city.slug} href={`/wilayah/${city.slug}`} className="hover:text-cyan-300 transition-colors">
+                    {city.name}
+                  </a>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 text-center flex justify-between items-center text-xs mb-6">
+                <a href={`/wilayah/provinsi-${currentRegion.province.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`} className="text-cyan-400 hover:text-cyan-300 font-medium">
+                  ← Lihat Seluruh Wilayah {currentRegion.province}
+                </a>
+                <a href="/" className="text-cyan-400 hover:text-cyan-300 font-medium">
+                  Kembali ke Beranda Utama →
+                </a>
+              </div>
+            </>
+          )}
+        </div>
+
         {cmsData.footer_text && (
           <div className="text-center py-6 text-sm text-cyan-400/50 print:hidden">
             {cmsData.footer_text}
