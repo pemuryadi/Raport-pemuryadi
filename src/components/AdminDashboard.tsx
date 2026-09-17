@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, LogOut, ArrowLeft, Image as ImageIcon, FileText, Database, Layout, Users } from 'lucide-react';
+import { Save, Loader2, LogOut, ArrowLeft, Image as ImageIcon, FileText, Database, Layout, Users, DollarSign, RefreshCw } from 'lucide-react';
 
 interface CmsData {
   app_title: string;
@@ -14,6 +14,9 @@ interface CmsData {
   tahun_ajaran_options: string;
   semester_options: string;
   smk_program_options: string;
+  adsense_client_id: string;
+  adsense_slot_id: string;
+  adsense_enabled: string;
 }
 
 export function AdminDashboard() {
@@ -30,13 +33,38 @@ export function AdminDashboard() {
     tahun_ajaran_options: '2023/2024, 2024/2025, 2025/2026',
     semester_options: 'Ganjil, Genap',
     smk_program_options: 'Bisnis dan Manajemen, Pariwisata, Seni dan Ekonomi Kreatif, Teknologi Informasi, Kesehatan dan Pekerjaan Sosial, Agribisnis dan Agroteknologi, Kemaritiman, Teknologi Konstruksi dan Properti, Teknologi Manufaktur dan Rekayasa, Energi dan Pertambangan',
+    adsense_client_id: '',
+    adsense_slot_id: '',
+    adsense_enabled: 'false',
   });
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [refreshingVisitors, setRefreshingVisitors] = useState(false);
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'branding' | 'panduan' | 'master' | 'visitors'>('branding');
+  const [activeTab, setActiveTab] = useState<'branding' | 'panduan' | 'master' | 'visitors' | 'adsense'>('branding');
   const [visitors, setVisitors] = useState<any[]>([]);
+  const [totalPageviews, setTotalPageviews] = useState(0);
+
+  const fetchVisitors = async () => {
+    setRefreshingVisitors(true);
+    try {
+      const visRes = await fetch('/api/visitors');
+      if (visRes.ok) {
+        const visData = await visRes.json();
+        if (Array.isArray(visData)) {
+          setVisitors(visData);
+        } else if (visData && visData.visitors) {
+          setVisitors(visData.visitors);
+          setTotalPageviews(visData.total_pageviews || 0);
+        }
+      }
+    } catch (e) {
+      console.error("Gagal mengambil data visitor", e);
+    } finally {
+      setRefreshingVisitors(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +73,6 @@ export function AdminDashboard() {
         if (response.ok) {
           const result = await response.json();
           
-          // Helper to safely parse JSON array to comma separated string
           const parseOptions = (jsonStr: string, fallback: string) => {
             if (!jsonStr) return fallback;
             try {
@@ -56,36 +83,31 @@ export function AdminDashboard() {
             }
           };
 
-          setData({
-            app_title: result.app_title || data.app_title,
-            app_subtitle: result.app_subtitle || data.app_subtitle,
-            logo_url: result.logo_url || data.logo_url,
-            footer_text: result.footer_text || data.footer_text,
-            announcement_text: result.announcement_text || data.announcement_text,
-            modul_pdf_url: result.modul_pdf_url || data.modul_pdf_url,
-            guide_data_siswa: result.guide_data_siswa || data.guide_data_siswa,
-            guide_daftar_nilai: result.guide_daftar_nilai || data.guide_daftar_nilai,
-            guide_konversi: result.guide_konversi || data.guide_konversi,
-            tahun_ajaran_options: parseOptions(result.tahun_ajaran_options, data.tahun_ajaran_options),
-            semester_options: parseOptions(result.semester_options, data.semester_options),
-            smk_program_options: parseOptions(result.smk_program_options, data.smk_program_options),
-          });
+          setData(prev => ({
+            ...prev,
+            app_title: result.app_title || prev.app_title,
+            app_subtitle: result.app_subtitle || prev.app_subtitle,
+            logo_url: result.logo_url || prev.logo_url,
+            footer_text: result.footer_text || prev.footer_text,
+            announcement_text: result.announcement_text || prev.announcement_text,
+            modul_pdf_url: result.modul_pdf_url || prev.modul_pdf_url,
+            guide_data_siswa: result.guide_data_siswa || prev.guide_data_siswa,
+            guide_daftar_nilai: result.guide_daftar_nilai || prev.guide_daftar_nilai,
+            guide_konversi: result.guide_konversi || prev.guide_konversi,
+            tahun_ajaran_options: parseOptions(result.tahun_ajaran_options, prev.tahun_ajaran_options),
+            semester_options: parseOptions(result.semester_options, prev.semester_options),
+            smk_program_options: parseOptions(result.smk_program_options, prev.smk_program_options),
+            adsense_client_id: result.adsense_client_id || '',
+            adsense_slot_id: result.adsense_slot_id || '',
+            adsense_enabled: result.adsense_enabled || 'false',
+          }));
         }
       } catch (error) {
         console.error("Gagal mengambil data CMS", error);
       }
       
-      try {
-        const visRes = await fetch('/api/visitors');
-        if (visRes.ok) {
-          const visData = await visRes.json();
-          setVisitors(visData);
-        }
-      } catch (e) {
-        console.error("Gagal mengambil data visitor", e);
-      } finally {
-        setLoading(false);
-      }
+      await fetchVisitors();
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -96,7 +118,6 @@ export function AdminDashboard() {
     try {
       let finalValue = value;
       if (isArray) {
-        // Convert comma separated string to JSON array string
         const arr = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
         finalValue = JSON.stringify(arr);
       }
@@ -122,7 +143,7 @@ export function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
-    window.location.hash = ''; // Redirect to home
+    window.location.hash = '';
     window.location.reload();
   };
 
@@ -179,9 +200,9 @@ export function AdminDashboard() {
             </button>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                CMS Dashboard
+                CMS & Analytics Dashboard
               </h1>
-              <p className="text-sm text-cyan-200/60 mt-0.5">Kelola konten aplikasi Raport Digital secara Real-time</p>
+              <p className="text-sm text-cyan-200/60 mt-0.5">Kelola konten, Google AdSense, dan pantau pengunjung secara Real-time</p>
             </div>
           </div>
           <button 
@@ -232,6 +253,13 @@ export function AdminDashboard() {
             >
               <Users className="w-5 h-5" />
               <span className="font-medium">Analisis Pengunjung</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('adsense')}
+              className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all ${activeTab === 'adsense' ? 'bg-gradient-to-r from-cyan-900/50 to-transparent border border-cyan-500/30 text-cyan-300 shadow-[inset_2px_0_0_0_#22d3ee]' : 'hover:bg-white/5 text-gray-400 hover:text-gray-200'}`}
+            >
+              <DollarSign className="w-5 h-5" />
+              <span className="font-medium">Google AdSense</span>
             </button>
           </div>
 
@@ -294,47 +322,124 @@ export function AdminDashboard() {
 
             {activeTab === 'visitors' && (
               <div className="space-y-8 animate-in fade-in">
-                <div className="border-b border-white/5 pb-4">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-cyan-400" /> Analisis Pengunjung
-                  </h2>
-                  <p className="text-sm text-gray-400 mt-1">Daftar pengunjung yang telah login ke sistem dengan akun Google.</p>
+                <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Users className="w-5 h-5 text-cyan-400" /> Analisis Pengunjung Realtime
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">Pantau kunjungan tamu dan guru yang login dengan akun Google.</p>
+                  </div>
+                  <button
+                    onClick={fetchVisitors}
+                    disabled={refreshingVisitors}
+                    className="flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 text-cyan-300 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshingVisitors ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                   <div className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-bold text-cyan-400">{visitors.length}</span>
-                      <span className="text-sm text-gray-400">Total Pengunjung</span>
-                   </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-black/30 border border-cyan-500/20 rounded-xl p-4 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-cyan-400">{totalPageviews}</span>
+                    <span className="text-xs text-gray-400 mt-1">Total Kunjungan (Pageviews)</span>
+                  </div>
+                  <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-blue-400">{visitors.length}</span>
+                    <span className="text-xs text-gray-400 mt-1">Pengguna Terdaftar (Login)</span>
+                  </div>
+                  <div className="bg-black/30 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-emerald-400">
+                      {visitors.reduce((acc, curr) => acc + (Number(curr.login_count) || 1), 0)}
+                    </span>
+                    <span className="text-xs text-gray-400 mt-1">Total Sesi Interaksi</span>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full text-left text-sm text-gray-300">
                     <thead className="bg-white/5 border-b border-white/10 text-cyan-300">
                       <tr>
-                        <th className="p-4 font-semibold">Nama</th>
+                        <th className="p-4 font-semibold">Nama Pengguna</th>
                         <th className="p-4 font-semibold">Email</th>
-                        <th className="p-4 font-semibold">Total Login</th>
-                        <th className="p-4 font-semibold">Login Terakhir</th>
+                        <th className="p-4 font-semibold">Jumlah Sesi</th>
+                        <th className="p-4 font-semibold">Aktivitas Terakhir</th>
                       </tr>
                     </thead>
                     <tbody>
                       {visitors.length > 0 ? (
                         visitors.map((v, i) => (
                           <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="p-4">{v.name}</td>
-                            <td className="p-4">{v.email}</td>
-                            <td className="p-4">{v.login_count}</td>
-                            <td className="p-4">{new Date(v.last_login).toLocaleString('id-ID')}</td>
+                            <td className="p-4 font-medium text-white">{v.name || 'Pengguna Google'}</td>
+                            <td className="p-4 text-gray-300">{v.email}</td>
+                            <td className="p-4 text-cyan-300 font-mono">{v.login_count}</td>
+                            <td className="p-4 text-xs text-gray-400">
+                              {v.last_login ? new Date(v.last_login).toLocaleString('id-ID') : '-'}
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-gray-500">Belum ada data pengunjung.</td>
+                          <td colSpan={4} className="p-6 text-center text-gray-500">Belum ada data login pengguna.</td>
                         </tr>
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'adsense' && (
+              <div className="space-y-8 animate-in fade-in">
+                <div className="border-b border-white/5 pb-4">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-400" /> Integrasi Google AdSense
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">Atur banner iklan AdSense di website. Iklan otomatis disembunyikan saat lembar raport dicetak.</p>
+                </div>
+
+                <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-4 text-xs text-emerald-200/90 leading-relaxed">
+                  <p className="font-semibold mb-1">Catatan Penting Google AdSense:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>File verifikasi <code className="bg-black/40 px-1 py-0.5 rounded text-emerald-300">ads.txt</code> telah aktif di folder publik website Anda (<code className="bg-black/40 px-1 py-0.5 rounded text-emerald-300">https://raportsks.my.id/ads.txt</code>).</li>
+                    <li>Semua slot iklan memiliki tag proteksi <code className="bg-black/40 px-1 py-0.5 rounded text-emerald-300">print:hidden</code>, sehingga tidak akan merusak atau mengotori hasil cetak raport siswa.</li>
+                    <li>Masukkan Publisher ID Anda (contoh: <code className="bg-black/40 px-1 py-0.5 rounded text-emerald-300">ca-pub-1234567890123456</code>) di bawah ini setelah disetujui oleh Google.</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-cyan-200 mb-2">Status Banner AdSense</label>
+                    <div className="flex gap-3 items-center">
+                      <select
+                        value={data.adsense_enabled}
+                        onChange={(e) => setData({ ...data, adsense_enabled: e.target.value })}
+                        className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-cyan-400 focus:outline-none"
+                      >
+                        <option value="false">Nonaktif (Sembunyikan Iklan)</option>
+                        <option value="true">Aktif (Tampilkan Banner Iklan)</option>
+                      </select>
+                      <button
+                        onClick={() => handleSave('adsense_enabled', data.adsense_enabled)}
+                        disabled={saving}
+                        className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-5 py-3 rounded-lg flex items-center gap-2 font-medium"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
+                      </button>
+                    </div>
+                  </div>
+
+                  <InputRow 
+                    label="Google AdSense Client / Publisher ID" 
+                    objKey="adsense_client_id" 
+                    placeholder="ca-pub-0000000000000000" 
+                  />
+
+                  <InputRow 
+                    label="Google AdSense Ad Slot ID" 
+                    objKey="adsense_slot_id" 
+                    placeholder="1234567890" 
+                  />
                 </div>
               </div>
             )}

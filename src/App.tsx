@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram, Sparkles, Loader2 } from 'lucide-react';
+import { Printer, FileText, Users, BookOpen, Home, Settings, CheckCircle, AlertCircle, Info, Save, Download, Upload, Trash2, Heart, Coffee, Facebook, Instagram, Sparkles, Loader2, LogIn, LogOut } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
-
+import { Login } from './components/Login';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfUse } from './components/TermsOfUse';
 import { daftarWilayah } from './data/wilayah';
@@ -275,8 +275,32 @@ const FormSelect = ({ label, value, onChange, options, className = '' }: any) =>
 export default function App() {
   const [activeTab, setActiveTab] = useState('beranda');
   const [hash, setHash] = useState(window.location.hash);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('user_session') || localStorage.getItem('app_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginReason, setLoginReason] = useState('');
   const [currentRegion, setCurrentRegion] = useState<any>(null);
+
+  // Gated action guard: requires user to be logged in
+  const requireAuth = (reason: string, action: () => void) => {
+    if (!user) {
+      setLoginReason(reason);
+      setShowLoginModal(true);
+      return;
+    }
+    action();
+  };
+
+  // Realtime pageview counter ping on mount
+  useEffect(() => {
+    fetch('/api/visitors?action=hit', { method: 'POST' }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const checkPath = () => {
@@ -310,7 +334,10 @@ export default function App() {
     guide_konversi: 'Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.',
     tahun_ajaran_options: TAHUN_AJARAN_OPTIONS,
     semester_options: SEMESTER_OPTIONS,
-    smk_program_options: SMK_PROGRAM
+    smk_program_options: SMK_PROGRAM,
+    adsense_client_id: '',
+    adsense_slot_id: '',
+    adsense_enabled: 'false',
   });
 
   useEffect(() => {
@@ -330,6 +357,7 @@ export default function App() {
              try { const arr = JSON.parse(str); return Array.isArray(arr) ? arr : fallback; } catch (e) { return fallback; }
           };
           setCmsData(prev => ({
+            ...prev,
             app_title: data.app_title || prev.app_title,
             app_subtitle: data.app_subtitle || prev.app_subtitle,
             logo_url: data.logo_url || prev.logo_url,
@@ -342,6 +370,9 @@ export default function App() {
             tahun_ajaran_options: parseArray(data.tahun_ajaran_options, prev.tahun_ajaran_options),
             semester_options: parseArray(data.semester_options, prev.semester_options),
             smk_program_options: parseArray(data.smk_program_options, prev.smk_program_options),
+            adsense_client_id: data.adsense_client_id || '',
+            adsense_slot_id: data.adsense_slot_id || '',
+            adsense_enabled: data.adsense_enabled || 'false',
           }));
         }
       } catch (e) {
@@ -459,21 +490,23 @@ export default function App() {
   }, []);
 
   const handleSave = () => {
-    try {
-      setSaveStatus('saving');
-      localStorage.setItem('raport_settings', JSON.stringify(settings));
-      localStorage.setItem('raport_students', JSON.stringify(students));
-      localStorage.setItem('raport_subjects', JSON.stringify(subjects));
-      
-      setTimeout(() => {
-        setSaveStatus('success');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-      }, 500);
-    } catch (error) {
-      console.error('Save error:', error);
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
+    requireAuth("Masuk dengan Akun Google untuk menyimpan data raport Anda.", () => {
+      try {
+        setSaveStatus('saving');
+        localStorage.setItem('raport_settings', JSON.stringify(settings));
+        localStorage.setItem('raport_students', JSON.stringify(students));
+        localStorage.setItem('raport_subjects', JSON.stringify(subjects));
+        
+        setTimeout(() => {
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        }, 500);
+      } catch (error) {
+        console.error('Save error:', error);
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    });
   };
 
   const handleReset = () => {
@@ -514,59 +547,62 @@ export default function App() {
   };
 
   const handleExport = (suffix: any = '') => {
-    const finalSuffix = typeof suffix === 'string' ? suffix : '';
-    const wb = XLSX.utils.book_new();
+    requireAuth("Masuk dengan Akun Google untuk mengekspor data raport ke format Excel.", () => {
+      const finalSuffix = typeof suffix === 'string' ? suffix : '';
+      const wb = XLSX.utils.book_new();
 
-    // Sheet 1: Settings
-    const exportSettings = { ...settings };
-    if (!['SMK', 'MAK'].includes(settings.jenjang)) {
-      delete (exportSettings as any).kejuruan;
-    }
-    const settingsData = [
-      ['Kunci', 'Nilai'],
-      ...Object.entries(exportSettings).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
-    ];
-    const wsSettings = XLSX.utils.aoa_to_sheet(settingsData);
-    XLSX.utils.book_append_sheet(wb, wsSettings, "Pengaturan");
-
-    // Sheet 2: Data Siswa & Nilai (Combined for easier editing)
-    const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Agama', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
-    const studentData = students.map(s => {
-      let keputusanVal = s.keputusan || '';
-      if (!keputusanVal && settings.semester === 'Genap') {
-        const nextK = getNextKelas(settings.jenjang, settings.kelas);
-        keputusanVal = settings.jenjang === 'PAUD' ? 'Selesai Fase Fondasi (Lulus)' :
-                       isFinalKelas(settings.jenjang, settings.kelas) ? 'Lulus' :
-                       `Naik ke kelas ${nextK} (${getKelasTerbilang(nextK)})`;
+      // Sheet 1: Settings
+      const exportSettings = { ...settings };
+      if (!['SMK', 'MAK'].includes(settings.jenjang)) {
+        delete (exportSettings as any).kejuruan;
       }
-      return [
-        s.id, s.nama, s.nisn, s.nis, s.agama, s.sakit, s.izin, s.alpha, s.catatanWali, keputusanVal, s.kokurikuler, 
-        ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
-        ...subjects.map(sub => s.nilai[sub] || '')
+      const settingsData = [
+        ['Kunci', 'Nilai'],
+        ...Object.entries(exportSettings).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
       ];
-    });
-    const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentData]);
-    XLSX.utils.book_append_sheet(wb, wsStudents, "Data Siswa dan Nilai");
+      const wsSettings = XLSX.utils.aoa_to_sheet(settingsData);
+      XLSX.utils.book_append_sheet(wb, wsSettings, "Pengaturan");
 
-    XLSX.writeFile(wb, `Raport_Digital_${settings.namaSekolah || 'Data'}${finalSuffix}.xlsx`);
+      // Sheet 2: Data Siswa & Nilai (Combined for easier editing)
+      const studentHeaders = ['ID', 'Nama', 'NISN', 'NIS', 'Agama', 'Sakit', 'Izin', 'Alpha', 'Catatan Wali Kelas', 'Keputusan', 'Kokurikuler', ...settings.ekskulList.map(e => `Ekstra: ${e}`), ...subjects];
+      const studentData = students.map(s => {
+        let keputusanVal = s.keputusan || '';
+        if (!keputusanVal && settings.semester === 'Genap') {
+          const nextK = getNextKelas(settings.jenjang, settings.kelas);
+          keputusanVal = settings.jenjang === 'PAUD' ? 'Selesai Fase Fondasi (Lulus)' :
+                         isFinalKelas(settings.jenjang, settings.kelas) ? 'Lulus' :
+                         `Naik ke kelas ${nextK} (${getKelasTerbilang(nextK)})`;
+        }
+        return [
+          s.id, s.nama, s.nisn, s.nis, s.agama, s.sakit, s.izin, s.alpha, s.catatanWali, keputusanVal, s.kokurikuler, 
+          ...settings.ekskulList.map(e => s.ekstra?.[e] || ''),
+          ...subjects.map(sub => s.nilai[sub] || '')
+        ];
+      });
+      const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentData]);
+      XLSX.utils.book_append_sheet(wb, wsStudents, "Data Siswa dan Nilai");
+
+      XLSX.writeFile(wb, `Raport_Digital_${settings.namaSekolah || 'Data'}${finalSuffix}.xlsx`);
+    });
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    requireAuth("Masuk dengan Akun Google untuk mengimpor data dari Excel.", () => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const bstr = evt.target?.result;
+          const wb = XLSX.read(bstr, { type: 'binary' });
 
-        // Import Settings
-        const wsSettings = wb.Sheets["Pengaturan"];
-        let updatedSettings = { ...settings };
-        if (wsSettings) {
-          const settingsJson = XLSX.utils.sheet_to_json(wsSettings) as any[];
-          settingsJson.forEach((row: any) => {
+          // Import Settings
+          const wsSettings = wb.Sheets["Pengaturan"];
+          let updatedSettings = { ...settings };
+          if (wsSettings) {
+            const settingsJson = XLSX.utils.sheet_to_json(wsSettings) as any[];
+            settingsJson.forEach((row: any) => {
             if (row.Kunci && row.Nilai !== undefined) {
               if (row.Kunci === 'ekskulList' || row.Kunci === 'muatanLokalList') {
                 try { (updatedSettings as any)[row.Kunci] = JSON.parse(row.Nilai); } catch (e) {}
@@ -689,6 +725,7 @@ export default function App() {
     reader.readAsBinaryString(file);
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
+    });
   };
 
   // --- Handlers ---
@@ -734,12 +771,22 @@ export default function App() {
   };
 
   const updateStudent = (index: number, field: keyof Student, value: string) => {
+    if (!user) {
+      setLoginReason("Silakan masuk dengan Akun Google untuk mengedit atau mengisi data siswa.");
+      setShowLoginModal(true);
+      return;
+    }
     const newStudents = [...students];
     newStudents[index] = { ...newStudents[index], [field]: value };
     setStudents(newStudents);
   };
 
   const updateStudentEkstra = (index: number, eks: string, value: string) => {
+    if (!user) {
+      setLoginReason("Silakan masuk dengan Akun Google untuk mengedit data ekstrakurikuler.");
+      setShowLoginModal(true);
+      return;
+    }
     const newStudents = [...students];
     newStudents[index].ekstra = { ...newStudents[index].ekstra, [eks]: value };
     setStudents(newStudents);
@@ -818,22 +865,30 @@ export default function App() {
   };
 
   const updateStudentNilai = (index: number, subject: string, value: string) => {
+    if (!user) {
+      setLoginReason("Silakan masuk dengan Akun Google untuk mengedit atau mengisi nilai siswa.");
+      setShowLoginModal(true);
+      return;
+    }
     const newStudents = [...students];
     newStudents[index].nilai = { ...newStudents[index].nilai, [subject]: value };
     setStudents(newStudents);
   };
 
   const handlePrint = () => {
-    setShowPrintModal(true);
+    requireAuth("Masuk dengan Akun Google untuk mencetak atau mengunduh lembar raport siswa.", () => {
+      setShowPrintModal(true);
+    });
   };
 
   const generateAICatatan = async (index: number) => {
-    const student = students[index];
+    requireAuth("Masuk dengan Akun Google untuk menggunakan asisten AI perumus deskripsi capaian siswa.", async () => {
+      const student = students[index];
 
-    if (!student.nama) {
-      alert("Mohon isi nama siswa terlebih dahulu.");
-      return;
-    }
+      if (!student.nama) {
+        alert("Mohon isi nama siswa terlebih dahulu.");
+        return;
+      }
 
     setIsGeneratingAI(prev => ({ ...prev, [index]: true }));
 
@@ -895,44 +950,47 @@ Syarat mutlak:
     } finally {
       setIsGeneratingAI(prev => ({ ...prev, [index]: false }));
     }
+    });
   };
 
   const handleKonversi = () => {
-    if (window.confirm('Apakah Anda yakin ingin mengonversi semua nilai? Tindakan ini akan mengubah seluruh nilai yang sudah diisi berdasarkan rumus konversi untuk masing-masing mata pelajaran.')) {
-      
-      let hasError = false;
-      const newStudents = students.map(s => {
-        const newNilai = { ...s.nilai };
-        for (const sub in newNilai) {
-          const val = parseFloat(newNilai[sub]);
-          if (!isNaN(val) && konversi[sub]) {
-            const { asliTertinggi, asliTerendah, harapanTertinggi, harapanTerendah } = konversi[sub];
-            const NCmax = asliTertinggi;
-            const NCmin = asliTerendah;
-            const NHmax = harapanTertinggi;
-            const NHmin = harapanTerendah;
+    requireAuth("Masuk dengan Akun Google untuk menggunakan fitur konversi nilai otomatis.", () => {
+      if (window.confirm('Apakah Anda yakin ingin mengonversi semua nilai? Tindakan ini akan mengubah seluruh nilai yang sudah diisi berdasarkan rumus konversi untuk masing-masing mata pelajaran.')) {
+        
+        let hasError = false;
+        const newStudents = students.map(s => {
+          const newNilai = { ...s.nilai };
+          for (const sub in newNilai) {
+            const val = parseFloat(newNilai[sub]);
+            if (!isNaN(val) && konversi[sub]) {
+              const { asliTertinggi, asliTerendah, harapanTertinggi, harapanTerendah } = konversi[sub];
+              const NCmax = asliTertinggi;
+              const NCmin = asliTerendah;
+              const NHmax = harapanTertinggi;
+              const NHmin = harapanTerendah;
 
-            if (NCmax === NCmin) {
-              hasError = true;
-              continue;
+              if (NCmax === NCmin) {
+                hasError = true;
+                continue;
+              }
+
+              let nk = NHmin + ((val - NCmin) / (NCmax - NCmin)) * (NHmax - NHmin);
+              nk = Math.round(nk);
+              newNilai[sub] = nk.toString();
             }
-
-            let nk = NHmin + ((val - NCmin) / (NCmax - NCmin)) * (NHmax - NHmin);
-            nk = Math.round(nk);
-            newNilai[sub] = nk.toString();
           }
-        }
-        return { ...s, nilai: newNilai };
-      });
+          return { ...s, nilai: newNilai };
+        });
 
-      if (hasError) {
-        alert('Gagal mengonversi beberapa mata pelajaran karena Nilai Asli Tertinggi dan Terendah sama (tidak boleh nol pembagian).');
-      } else {
-        setStudents(newStudents);
-        handleExport(' Konversi');
-        setTimeout(() => alert('Konversi nilai berhasil untuk semua mata pelajaran! File hasil konversi otomatis di-download sebagai cadangan.'), 300);
+        if (hasError) {
+          alert('Gagal mengonversi beberapa mata pelajaran karena Nilai Asli Tertinggi dan Terendah sama (tidak boleh nol pembagian).');
+        } else {
+          setStudents(newStudents);
+          handleExport(' Konversi');
+          setTimeout(() => alert('Konversi nilai berhasil untuk semua mata pelajaran! File hasil konversi otomatis di-download sebagai cadangan.'), 300);
+        }
       }
-    }
+    });
   };
 
   // --- Calculations ---
@@ -1051,15 +1109,46 @@ Syarat mutlak:
                 <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white transition-all border border-red-500/30">
                   <Trash2 className="w-4 h-4" /> Reset Data
                 </button>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('app_user');
-                    setUser(null);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-red-600/80 hover:bg-red-500 text-white transition-all shadow-lg ml-2"
-                >
-                  Logout
-                </button>
+                {user ? (
+                  <div className="flex items-center gap-2 bg-black/40 border border-cyan-500/30 px-3 py-1 rounded-lg ml-1">
+                    {user.picture ? (
+                      <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full object-cover border border-cyan-400" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center text-[10px] font-bold text-white">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    )}
+                    <span className="text-xs font-semibold text-cyan-200 max-w-[110px] truncate" title={user.email}>
+                      {user.name || user.email}
+                    </span>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('app_user');
+                        localStorage.removeItem('user_session');
+                        setUser(null);
+                      }}
+                      className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-300 ml-1 transition-colors"
+                      title="Keluar Akun"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 ml-1">
+                    <span className="hidden sm:inline-flex text-[11px] bg-cyan-950/60 text-cyan-300/80 border border-cyan-500/20 px-2 py-1 rounded-md">
+                      Tamu (Lihat Saja)
+                    </span>
+                    <button
+                      onClick={() => {
+                        setLoginReason("Masuk dengan Akun Google untuk mulai mengelola nilai, menambah siswa, dan mencetak raport.");
+                        setShowLoginModal(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-[0_0_15px_rgba(0,255,255,0.3)] border border-cyan-400/40"
+                    >
+                      <LogIn className="w-4 h-4" /> Masuk Akun
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1086,6 +1175,20 @@ Syarat mutlak:
               ))}
             </div>
           </div>
+
+          {/* Google AdSense Banner (Print-Safe) */}
+          {cmsData.adsense_enabled === 'true' && cmsData.adsense_client_id && (
+            <div className="w-full mb-4 p-3 bg-black/30 border border-white/10 rounded-xl text-center print:hidden overflow-hidden">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client={cmsData.adsense_client_id}
+                data-ad-slot={cmsData.adsense_slot_id || undefined}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+            </div>
+          )}
 
           {/* --- TAB CONTENT --- */}
           <div className="bg-white/5 border border-cyan-400/30 rounded-xl p-6 backdrop-blur-sm min-h-[600px]">
@@ -2057,6 +2160,21 @@ Syarat mutlak:
               </button>
             </motion.div>
           </motion.div>
+        )}
+
+        {/* Google Login Modal for Gated Actions */}
+        {showLoginModal && (
+          <Login
+            cmsData={cmsData}
+            onClose={() => setShowLoginModal(false)}
+            reason={loginReason}
+            onLoginSuccess={(loggedInUser) => {
+              setUser(loggedInUser);
+              localStorage.setItem('app_user', JSON.stringify(loggedInUser));
+              localStorage.setItem('user_session', JSON.stringify(loggedInUser));
+              setShowLoginModal(false);
+            }}
+          />
         )}
       </AnimatePresence>
 

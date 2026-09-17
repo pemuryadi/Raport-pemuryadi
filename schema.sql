@@ -19,7 +19,10 @@ INSERT INTO site_content (id, content_key, content_value) VALUES
 ('9', 'guide_konversi', 'Sesuaikan parameter konversi secara spesifik untuk masing-masing mata pelajaran. Mesin akan menggunakan formula yang diberikan untuk setiap mata pelajaran secara otomatis.'),
 ('10', 'tahun_ajaran_options', '["2023/2024", "2024/2025", "2025/2026"]'),
 ('11', 'semester_options', '["Ganjil", "Genap"]'),
-('12', 'smk_program_options', '["Bisnis dan Manajemen", "Pariwisata", "Seni dan Ekonomi Kreatif", "Teknologi Informasi", "Kesehatan dan Pekerjaan Sosial", "Agribisnis dan Agroteknologi", "Kemaritiman", "Teknologi Konstruksi dan Properti", "Teknologi Manufaktur dan Rekayasa", "Energi dan Pertambangan"]');
+('12', 'smk_program_options', '["Bisnis dan Manajemen", "Pariwisata", "Seni dan Ekonomi Kreatif", "Teknologi Informasi", "Kesehatan dan Pekerjaan Sosial", "Agribisnis dan Agroteknologi", "Kemaritiman", "Teknologi Konstruksi dan Properti", "Teknologi Manufaktur dan Rekayasa", "Energi dan Pertambangan"]'),
+('13', 'adsense_client_id', ''),
+('14', 'adsense_slot_id', ''),
+('15', 'adsense_enabled', 'false');
 
 CREATE TABLE IF NOT EXISTS visitors (
   email TEXT PRIMARY KEY,
@@ -27,3 +30,13 @@ CREATE TABLE IF NOT EXISTS visitors (
   last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   login_count INTEGER DEFAULT 1
 );
+
+CREATE TABLE IF NOT EXISTS page_stats (
+  id TEXT PRIMARY KEY,
+  stat_key TEXT UNIQUE NOT NULL,
+  stat_value INTEGER DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO page_stats (id, stat_key, stat_value) VALUES 
+('1', 'total_pageviews', 0);
