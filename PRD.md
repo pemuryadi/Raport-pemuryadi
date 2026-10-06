@@ -5,7 +5,7 @@
 
 ## 1. Pendahuluan & Latar Belakang
 
-**Raport Digital Builder** adalah platform aplikasi berbasis web modern dan responsif yang dirancang untuk mempermudah guru dan satuan pendidikan di Indonesia dalam mengelola data siswa, menghitung nilai akhir, melakukan konversi nilai otomatis, menyusun deskripsi capaian kompetensi berbantuan AI, serta mencetak lembar raport sesuai standar Kurikulum Merdeka (SK BSKAP No. 046/H/KR/2025).
+**Raport Digital Builder** adalah platform aplikasi berbasis web modern dan responsif yang dirancang untuk mempermudah guru dan satuan pendidikan di Indonesia dalam mengelola data siswa, menghitung nilai akhir, melakukan konversi nilai otomatis, menyusun deskripsi capaian kompetensi berbantuan AI, serta mencetak lembar raport sesuai standar Kurikulum Merdeka (SK BSKAP No. 046/H/KR/2025 & BKPDM No. 020 Tahun 2026).
 
 Aplikasi ini bertujuan memberikan akses gratis, cepat, dan praktis tanpa memerlukan instalasi software berat, serta dapat diakses baik dari laptop maupun smartphone.
 

@@ -143,7 +143,7 @@ function generateDeskripsi(mapel: string, skor: string | number, agamaSiswa: str
   const nilai = Number(skor);
   const m = mapel.toLowerCase();
   
-  let capaianTertinggi = "memahami berbagai capaian pembelajaran secara menyeluruh sesuai standar BSKAP No. 046/H/KR/2025";
+  let capaianTertinggi = "memahami berbagai capaian pembelajaran secara menyeluruh sesuai standar BSKAP No. 046/H/KR/2025 & BKPDM No. 020 Tahun 2026";
   let capaianTerendah = "penguasaan materi yang lebih kompleks";
 
   if (m.includes("matematika")) {
@@ -257,7 +257,7 @@ const FormInput = ({ label, value, onChange, placeholder = '', type = 'text', cl
   </div>
 );
 
-const FormSelect = ({ label, value, onChange, options, className = '' }: any) => (
+const FormSelect = ({ label, value, onChange, options, className = '', placeholder = '' }: any) => (
   <div className={`flex flex-col gap-1 ${className}`}>
     <label className="text-sm text-cyan-200 font-medium">{label}</label>
     <select
@@ -265,6 +265,11 @@ const FormSelect = ({ label, value, onChange, options, className = '' }: any) =>
       onChange={onChange}
       className="bg-black/40 border border-cyan-400/30 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all appearance-none"
     >
+      {placeholder && (
+        <option value="" className="bg-[#1a1a2e] text-cyan-300/50">
+          {placeholder}
+        </option>
+      )}
       {options.map((opt: string) => (
         <option key={opt} value={opt} className="bg-[#1a1a2e] text-white">{opt}</option>
       ))}
@@ -393,7 +398,7 @@ export default function App() {
     kelas: 'I',
     kejuruan: SMK_PROGRAM[0],
     semester: 'Ganjil',
-    tahunAjaran: '2023/2024',
+    tahunAjaran: '',
     namaSekolah: '',
     alamatSekolah: '',
     namaKepsek: '',
@@ -469,6 +474,7 @@ export default function App() {
       const p = JSON.parse(savedSettings);
       if (!p.ekskulList) p.ekskulList = ['Pramuka'];
       if (!p.muatanLokalList) p.muatanLokalList = ['Muatan Lokal'];
+      if (p.tahunAjaran === '2023/2024') p.tahunAjaran = '';
       setSettings(p);
     }
     if (savedStudents) {
@@ -520,7 +526,7 @@ export default function App() {
         kelas: 'I',
         kejuruan: SMK_PROGRAM[0],
         semester: 'Ganjil',
-        tahunAjaran: '2023/2024',
+        tahunAjaran: '',
         namaSekolah: '',
         alamatSekolah: '',
         namaKepsek: '',
@@ -1285,7 +1291,7 @@ Syarat mutlak:
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormSelect label="Semester" value={settings.semester} onChange={(e: any) => setSettings({...settings, semester: e.target.value})} options={cmsData.semester_options} />
-                    <FormSelect label="Tahun Ajaran" value={settings.tahunAjaran} onChange={(e: any) => setSettings({...settings, tahunAjaran: e.target.value})} options={cmsData.tahun_ajaran_options} />
+                    <FormSelect label="Tahun Ajaran" value={settings.tahunAjaran} onChange={(e: any) => setSettings({...settings, tahunAjaran: e.target.value})} options={cmsData.tahun_ajaran_options} placeholder="-- Pilih / Kosongkan --" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormInput label="Nama Sekolah" value={settings.namaSekolah} onChange={(e: any) => setSettings({...settings, namaSekolah: e.target.value})} />
@@ -1737,67 +1743,42 @@ Syarat mutlak:
         </div>
         
         {/* Footer */}
-        <div className="mt-8 border-t border-white/10 pt-8 text-left max-w-7xl mx-auto px-4 print:hidden">
-          {!currentRegion ? (
-            <>
-              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
-                Direktori Raport Kurikulum Merdeka per Provinsi se-Indonesia:
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
-                {daftarWilayah.filter(w => w.type === 'provinsi').map(prov => (
-                  <a key={prov.slug} href={`/wilayah/${prov.slug}`} className="hover:text-cyan-300 transition-colors">
-                    {prov.name}
-                  </a>
-                ))}
-              </div>
-            </>
-          ) : currentRegion.type === 'provinsi' ? (
-            <>
-              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
-                Aplikasi Raport Kurikulum Merdeka Kabupaten & Kota di {currentRegion.name}:
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
-                {daftarWilayah.filter(w => w.province === currentRegion.name && w.type !== 'provinsi').map(city => (
-                  <a key={city.slug} href={`/wilayah/${city.slug}`} className="hover:text-cyan-300 transition-colors">
-                    {city.name}
-                  </a>
-                ))}
-              </div>
-              <div className="mt-4 pt-4 border-t border-white/5 text-center mb-6">
-                <a href="/" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
-                  ← Kembali ke Beranda Utama
-                </a>
-              </div>
-            </>
-          ) : (
-            <>
-              <h3 className="text-sm font-semibold text-cyan-400 mb-4 uppercase tracking-wider">
-                Aplikasi Raport Kurikulum Merdeka Lainnya di Provinsi {currentRegion.province}:
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs text-cyan-200/60 mb-6">
-                {daftarWilayah.filter(w => w.province === currentRegion.province && w.slug !== currentRegion.slug).map(city => (
-                  <a key={city.slug} href={`/wilayah/${city.slug}`} className="hover:text-cyan-300 transition-colors">
-                    {city.name}
-                  </a>
-                ))}
-              </div>
-              <div className="mt-4 pt-4 border-t border-white/5 text-center flex justify-between items-center text-xs mb-6">
-                <a href={`/wilayah/provinsi-${currentRegion.province.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`} className="text-cyan-400 hover:text-cyan-300 font-medium">
-                  ← Lihat Seluruh Wilayah {currentRegion.province}
-                </a>
-                <a href="/" className="text-cyan-400 hover:text-cyan-300 font-medium">
-                  Kembali ke Beranda Utama →
-                </a>
-              </div>
-            </>
+        <footer className="mt-12 border-t border-cyan-500/20 pt-8 pb-8 text-center max-w-7xl mx-auto px-4 print:hidden">
+          {currentRegion && (
+            <div className="mb-4">
+              <a href="/" className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+                ← Kembali ke Beranda Utama
+              </a>
+            </div>
           )}
-        </div>
 
-        {cmsData.footer_text && (
-          <div className="text-center py-6 text-sm text-cyan-400/50 print:hidden">
-            {cmsData.footer_text}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-sm text-cyan-300/80 mb-3">
+            <span className="text-slate-400">Support by</span>
+            <a 
+              href="https://www.pemuryadi.my.id/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-medium text-cyan-400 hover:text-cyan-200 underline underline-offset-4 transition-colors"
+            >
+              https://www.pemuryadi.my.id/
+            </a>
+            <span className="text-slate-600 px-1">•</span>
+            <a 
+              href="https://digen.id/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-medium text-cyan-400 hover:text-cyan-200 underline underline-offset-4 transition-colors"
+            >
+              https://digen.id/
+            </a>
           </div>
-        )}
+
+          {cmsData.footer_text && (
+            <div className="text-xs text-cyan-400/50">
+              {cmsData.footer_text}
+            </div>
+          )}
+        </footer>
 
       </div>
 
